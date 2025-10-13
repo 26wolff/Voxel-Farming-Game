@@ -29,3 +29,4 @@ c:\Users\tyler\CODE\VoxelFarm\obj\Debug\net9.0\refint\VoxelFarm.dll
 c:\Users\tyler\CODE\VoxelFarm\obj\Debug\net9.0\VoxelFarm.pdb
 c:\Users\tyler\CODE\VoxelFarm\obj\Debug\net9.0\VoxelFarm.genruntimeconfig.cache
 c:\Users\tyler\CODE\VoxelFarm\obj\Debug\net9.0\ref\VoxelFarm.dll
+c:\Users\tyler\CODE\VoxelFarm\obj\Debug\net9.0\VoxelFarm.sourcelink.json

@@ -9,6 +9,7 @@ namespace Program
         public bool Left { get; private set; }
         public bool Right { get; private set; }
         public bool Exit { get; private set; }
+        public bool F11 { get; private set; }
 
         public void HandleInput()
         {
@@ -19,6 +20,9 @@ namespace Program
             Left = keyboard.IsKeyDown(Keys.Left);
             Right = keyboard.IsKeyDown(Keys.Right);
             Exit = keyboard.IsKeyDown(Keys.Escape);
+            F11 = keyboard.IsKeyDown(Keys.F11);
+
+            
         }
     }
 }
