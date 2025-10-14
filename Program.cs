@@ -31,6 +31,8 @@ namespace Program
             _drawManager = new DrawManager();
             _inputManager = new InputManager();
 
+            Player.Innit();
+
             SetWindowedMode();
             Window.AllowUserResizing = true;
             Window.ClientSizeChanged += OnWindowResize;
@@ -39,33 +41,14 @@ namespace Program
         private void OnWindowResize(object? sender, EventArgs e)
         {
             Screen.Resolution = Window.ClientBounds.Height;
-            Console.WriteLine($"Resolution updated: {Screen.Resolution}");
+            Screen.Aspect = Window.ClientBounds.Width / Screen.Resolution;
+            Console.WriteLine($"Resolution updated: {Screen.Resolution}, Aspect updated: {Screen.Aspect}");
         }
-
-        private void SetFullscreenMode()
+        private void SetWindowedMode(int Resolution = 500)
         {
-            var display = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode;
-            Screen.Resolution = display.Height;
-
-            _graphics.PreferredBackBufferWidth = (int)(Screen.Resolution * Screen.Aspect);
-            _graphics.PreferredBackBufferHeight = (int)Screen.Resolution;
-
-            _graphics.IsFullScreen = false; // Borderless fullscreen windowed
-            _graphics.ApplyChanges();
-
-            Window.IsBorderless = true;
-            Window.Position = new Point(0, 0);
-        }
-
-        private void SetWindowedMode()
-        {
-            int windowHeight = 500;
-            int windowWidth = (int)(windowHeight * Screen.Aspect);
-
-            Screen.Resolution = windowHeight;
-
-            _graphics.PreferredBackBufferWidth = windowWidth;
-            _graphics.PreferredBackBufferHeight = windowHeight;
+            Screen.Resolution = Resolution;
+            _graphics.PreferredBackBufferWidth = (int)(Resolution * Screen.Aspect);
+            _graphics.PreferredBackBufferHeight = Resolution;
 
             _graphics.IsFullScreen = false;
             _graphics.ApplyChanges();
@@ -86,8 +69,7 @@ namespace Program
         {
             _inputManager.HandleInput();
 
-            if (_inputManager.Exit)
-                Exit();
+            if (_inputManager.Exit) Exit();
 
             _updateManager.Update(gameTime, _inputManager);
             base.Update(gameTime);

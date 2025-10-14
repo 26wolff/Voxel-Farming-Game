@@ -19,8 +19,7 @@ namespace Program
             _squareTexture.SetData(new[] { Color.White });
 
             // Construct path relative to executable
-            string projectRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "..");
-            string imagePath = Path.Combine(projectRoot, "Content", "myImage.png");
+            string imagePath = "../../../Data/World/Images/Test.png";
 
             using (FileStream fileStream = new FileStream(imagePath, FileMode.Open))
             {
