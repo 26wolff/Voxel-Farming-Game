@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VoxelFarm")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1561ac2932445cd837a4d7503fca012f79ff3029")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+421b268324eb7cc4328f9630327a0d11a4811fda")]
 [assembly: System.Reflection.AssemblyProductAttribute("VoxelFarm")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VoxelFarm")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

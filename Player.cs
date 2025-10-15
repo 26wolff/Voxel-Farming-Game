@@ -29,7 +29,7 @@ namespace Program
 
             string jsonString = File.ReadAllText(dataPath);
 
-            var options = new JsonSerializerOptions{PropertyNameCaseInsensitive = true};
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
 
             var playerData = JsonSerializer.Deserialize<PlayerData>(jsonString, options);
 
@@ -45,6 +45,14 @@ namespace Program
                 }
             }
             Console.WriteLine($"Loaded player position: {Position}");
+        }
+
+        public static void Update(float dt, InputManager input)
+        {
+            if (input.Right) Position.X += 0.5f*dt;
+            if (input.Left) Position.X -= 0.5f*dt;
+            if (input.Up) Position.Y -= 0.5f*dt;
+            if (input.Down) Position.Y += 0.5f*dt;
         }
 
         public static void Save()
