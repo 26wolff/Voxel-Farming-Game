@@ -6,6 +6,7 @@ namespace Program
 {
     public class DrawManager
     {
+        
         private SpriteBatch? _spriteBatch;
         private Texture2D? _squareTexture;
         private Texture2D? _myTexture;
@@ -23,7 +24,7 @@ namespace Program
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "VoxelFarm",
                 "Data",
-                "World",
+                "Resources",
                 "Test.png"
             );
 
@@ -50,16 +51,18 @@ namespace Program
 
             // Draw the loaded image at the player's position
             _spriteBatch.Draw(
-                texture: _myTexture,  
-                position: new Vector2((int)(Player.Position.X * Screen.Resolution), (int)(Player.Position.Y * Screen.Resolution)), 
-                sourceRectangle: null,       
-                color: Color.White,          
-                rotation: 0f,                
-                origin: Vector2.Zero,        
-                scale: 0.15f * Screen.Resolution / _myTexture.Height,                   
-                effects: SpriteEffects.None, 
-                layerDepth: 0f               
+                texture: _myTexture,
+                position: new Vector2((int)(Player.Position.X * Screen.Resolution), (int)(Player.Position.Y * Screen.Resolution)),
+                sourceRectangle: null,
+                color: Color.White,
+                rotation: 4f,
+                origin: Vector2.Zero,
+                scale: 0.15f * Screen.Resolution / _myTexture.Height,
+                effects: SpriteEffects.None,
+                layerDepth: 0f
             );
+            
+            
 
             _spriteBatch.End();
         }

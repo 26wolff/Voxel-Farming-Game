@@ -30,6 +30,8 @@ namespace Program
             _updateManager = new UpdateManager();
             _drawManager = new DrawManager();
             _inputManager = new InputManager();
+
+            GameDataSync.Reset(true);
             GameDataSync.Sync();
 
             Player.Init();

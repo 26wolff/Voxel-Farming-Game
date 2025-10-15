@@ -18,8 +18,29 @@ namespace Program
         /// <summary>
         /// Call this on startup to sync the base data structure to AppData
         /// </summary>
-        public static void Sync()
+        public static void Reset(bool kill = false)
         {
+            string targetDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            targetDirectory = Path.Combine(targetDirectory, "VoxelFarm");
+            Console.WriteLine("KILLED ALL FILES");
+            if (kill)
+            {
+                if (Directory.Exists(targetDirectory))
+                {
+                    Directory.Delete(targetDirectory, true);
+                }
+                else
+                {
+                    Console.WriteLine($"Directory not found: {targetDirectory}");
+                }
+            }
+        }
+        public static void Sync(bool kill = false)
+        {
+            if (kill)
+            {
+                
+            }
             if (!Directory.Exists(sourceRoot))
             {
                 Console.WriteLine($"Base data folder not found: {sourceRoot}");

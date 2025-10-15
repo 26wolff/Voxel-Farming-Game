@@ -29,23 +29,21 @@ namespace Program
 
             string jsonString = File.ReadAllText(dataPath);
 
-            var options = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            };
+            var options = new JsonSerializerOptions{PropertyNameCaseInsensitive = true};
 
-            // Deserialize JSON into helper class
             var playerData = JsonSerializer.Deserialize<PlayerData>(jsonString, options);
 
-            if (playerData != null && playerData.Position != null)
+            if (playerData != null)
             {
-                Position = new Vector3(
-                    playerData.Position.X,
-                    playerData.Position.Y,
-                    playerData.Position.Z
-                );
+                if (playerData.Position != null)
+                {
+                    Position = new Vector3(
+                        playerData.Position.X,
+                        playerData.Position.Y,
+                        playerData.Position.Z
+                    );
+                }
             }
-
             Console.WriteLine($"Loaded player position: {Position}");
         }
 

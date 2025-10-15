@@ -22,7 +22,12 @@ namespace Program
             Exit = keyboard.IsKeyDown(Keys.Escape);
             F11 = keyboard.IsKeyDown(Keys.F11);
 
-            
+
         }
+    }
+    public class Key
+    {
+        public bool IsDown { get; set; } = false;
+        public bool IsUsed { get; set; } = false;
     }
 }
