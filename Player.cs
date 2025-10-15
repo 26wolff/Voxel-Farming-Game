@@ -11,8 +11,14 @@ namespace Program
 
         public static void Innit()
         {
-            var path = "../../../Data/Player/PlayerData.json";
-            string jsonString = File.ReadAllText(path);
+            // Build the path relative to the executable
+            string dataPath = Path.Combine(AppContext.BaseDirectory, "Data", "Player", "PlayerData.json");
+            if (!File.Exists(dataPath))
+            {
+                Console.WriteLine($"Player data file not found: {dataPath}");
+                return;
+            }
+            string jsonString = File.ReadAllText(dataPath);
             Console.WriteLine(jsonString);
         }
     }

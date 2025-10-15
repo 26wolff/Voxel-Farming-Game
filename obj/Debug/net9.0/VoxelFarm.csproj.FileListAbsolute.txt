@@ -62,3 +62,5 @@ C:\Users\tyler\T\Code\Voxel-Farming-Game\obj\Debug\net9.0\refint\VoxelFarm.dll
 C:\Users\tyler\T\Code\Voxel-Farming-Game\obj\Debug\net9.0\VoxelFarm.pdb
 C:\Users\tyler\T\Code\Voxel-Farming-Game\obj\Debug\net9.0\VoxelFarm.genruntimeconfig.cache
 C:\Users\tyler\T\Code\Voxel-Farming-Game\obj\Debug\net9.0\ref\VoxelFarm.dll
+c:\Users\tyler\CODE\VoxelFarm\bin\Debug\net9.0\Data\Player\PlayerData.json
+c:\Users\tyler\CODE\VoxelFarm\bin\Debug\net9.0\Data\World\Test.png
