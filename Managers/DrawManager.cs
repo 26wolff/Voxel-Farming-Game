@@ -18,13 +18,27 @@ namespace Program
             _squareTexture = new Texture2D(graphics, 1, 1);
             _squareTexture.SetData(new[] { Color.White });
 
-            // Construct path relative to executable
-            string imagePath = Path.Combine(AppContext.BaseDirectory, "Data", "World", "Test.png");
+            // Construct path in AppData\Local\VoxelFarm\Data\World\Test.png
+            string imagePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "VoxelFarm",
+                "Data",
+                "World",
+                "Test.png"
+            );
 
-            using (FileStream fileStream = new FileStream(imagePath, FileMode.Open))
+            if (!File.Exists(imagePath))
+            {
+                Console.WriteLine($"Image not found: {imagePath}");
+                return;
+            }
+
+            using (FileStream fileStream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
             {
                 _myTexture = Texture2D.FromStream(graphics, fileStream);
             }
+
+            Console.WriteLine($"Loaded image from: {imagePath}");
         }
 
         public void Draw(GameTime gameTime, UpdateManager update)
@@ -35,17 +49,16 @@ namespace Program
             _spriteBatch.Begin();
 
             // Draw the loaded image at the player's position
-            
             _spriteBatch.Draw(
-                texture: _myTexture,          // your Texture2D
-                position: new Vector2((int)(Player.Position.X * Screen.Resolution), (int)(Player.Position.Y * Screen.Resolution)), // top-left position
-                sourceRectangle: null,       // null means use full texture
-                color: Color.White,          // color tint (White = no change)
-                rotation: 0f,                // rotation in radians
-                origin: Vector2.Zero,        // rotation/scaling origin
-                scale: 0.15f * Screen.Resolution / _myTexture.Height,                   // scale factor (2 = double size)
-                effects: SpriteEffects.None, // flip effects
-                layerDepth: 0f               // draw order
+                texture: _myTexture,  
+                position: new Vector2((int)(Player.Position.X * Screen.Resolution), (int)(Player.Position.Y * Screen.Resolution)), 
+                sourceRectangle: null,       
+                color: Color.White,          
+                rotation: 0f,                
+                origin: Vector2.Zero,        
+                scale: 0.15f * Screen.Resolution / _myTexture.Height,                   
+                effects: SpriteEffects.None, 
+                layerDepth: 0f               
             );
 
             _spriteBatch.End();

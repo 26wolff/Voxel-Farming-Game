@@ -30,8 +30,9 @@ namespace Program
             _updateManager = new UpdateManager();
             _drawManager = new DrawManager();
             _inputManager = new InputManager();
+            GameDataSync.Sync();
 
-            Player.Innit();
+            Player.Init();
 
             SetWindowedMode();
             Window.AllowUserResizing = true;
@@ -70,6 +71,8 @@ namespace Program
             _inputManager.HandleInput();
 
             if (_inputManager.Exit) Exit();
+
+            if (_inputManager.F11) Player.Save();
 
             _updateManager.Update(gameTime, _inputManager);
             base.Update(gameTime);
