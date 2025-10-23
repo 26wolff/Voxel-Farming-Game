@@ -35,6 +35,7 @@ namespace Program
             GameDataSync.Sync();
 
             Player.Init();
+            World.Init();
 
             SetWindowedMode();
             Window.AllowUserResizing = true;
