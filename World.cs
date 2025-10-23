@@ -19,16 +19,29 @@ namespace Program
         {
             Console.WriteLine("T");
             string id;
-            int[] binData = GetChunkBin("w-1", "0_0", out id);
+            int[] binData = GetChunkBin("w-1", "0_0_0", out id);
+            //replace with just a returing chunk function
             Chunk tc = formatChunkData(id,binData);
         }
         public static Chunk formatChunkData(string id, int[] de)
         {
-            int[,,] formed = { };
+            int[][][] formed = getEmptyChunk();
 
             // Do dec to chunk conversion //
+            
+
 
             return new Chunk(id, formed);
+        }
+        public static int[][][] getEmptyChunk()
+        {
+            int[][][] ou = new int[16][][];
+            for (int x = 0; x < 16; x++)
+            {
+                ou[x] = new int[16][];
+                for (int y = 0; y < 16; y++) ou[x][y] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            }
+            return ou;
         }
         public static int[] GetChunkBin(string world, string chunk, out string id)
         {
@@ -52,8 +65,8 @@ namespace Program
     public class Chunk
     {
         public string id { get; set; }
-        public int[,,] data { get; set; }
-        public Chunk(string Id, int[,,] Data)
+        public int[][][] data { get; set; }
+        public Chunk(string Id, int[][][] Data)
         {
             id = Id;
             data = Data;
