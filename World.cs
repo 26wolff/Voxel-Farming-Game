@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Intrinsics.X86;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Numerics;
 
 namespace Program
 {
@@ -27,9 +28,84 @@ namespace Program
         {
             int[][][] formed = getEmptyChunk();
 
-            // Do dec to chunk conversion //
-            
+            for(int i = 0; i < de.Length; i++)
+            {
+                Console.Write($"{de[i]} ");
+            }
 
+            // Do dec to chunk conversion //
+            Vector3 cord = new Vector3(0f, 0f, 0f);
+            int typeLast = 0;
+            string type = "cord";
+
+            for (int i = 0; i < de.Length; i++)
+            {
+                int code = de[i];
+                if (code == 254 && type != "cord")
+                {
+                    type = "type";
+                    i++;
+                    if (cord.Z > 0) cord.Z--;
+                    for (int t = 0; t < de[i]; t++)
+                    {
+                        formed[(int)cord.X][(int)cord.Y][(int)cord.Z] = typeLast;
+                        cord.Z++;
+                    }
+                    continue;
+
+                }
+                if (code == 255)
+                {
+                    type = "cord";
+                    typeLast = 0;
+                    cord.Z = 0;
+                    continue;
+                }
+                else if (type == "cord")
+                {
+                    cord.X = (int)Math.Floor((double)(code / 16));
+                    cord.Y = code % 16;
+                    type = "type";
+                    continue;
+                }
+                if (type == "type")
+                {
+                    int t_type = 0;
+                    if (code != 0)
+                    {
+                        t_type += code * 16;
+                        i++;
+                        t_type += de[i];
+                    }
+                    typeLast = t_type;
+                    formed[(int)cord.X][(int)cord.Y][(int)cord.Z] = t_type;
+                    cord.Z++;
+                }
+            }
+
+            // for (int y = 0; y < 16; y++)
+            // {
+            //     for (int x = 0; x < 16; x++)
+            //     {
+            //         for (int z = 0; z < 16; z++)
+            //         {
+            //             int t = formed[z][y][x];
+            //             string efuck = "";
+            //             if (t > 0) 
+            //             {
+            //                 efuck = $"{t - 15}";
+            //             }
+            //             else if(t == 0) {
+            //                 efuck = " "; 
+            //             }
+                        
+            //             Console.Write(efuck);
+            //             Console.Write("  ");
+            //         }
+            //         Console.WriteLine();
+            //     }
+            //     Console.WriteLine("-------------------------------------------------");
+            // }
 
             return new Chunk(id, formed);
         }
