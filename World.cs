@@ -1,13 +1,10 @@
 using System;
 using System.IO;
-using System.Runtime.Intrinsics.X86;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Numerics;
+using System.Linq;
 
 namespace Program
 {
-
     public static class World
     {
         private static string heldPath = Path.Combine(
@@ -16,128 +13,128 @@ namespace Program
             "Data",
             "World"
         );
+
         public static void Init()
         {
             Console.WriteLine("T");
-            string id;
-            int[] binData = GetChunkBin("w-1", "0_0_0", out id);
-            //replace with just a returing chunk function
-            Chunk tc = formatChunkData(id,binData);
+            Chunk tc = FormatChunkData("w-1", "0_0_0");
         }
-        public static Chunk formatChunkData(string id, int[] de)
+
+        public static Chunk FormatChunkData(string world, string chunk)
         {
-            int[][][] formed = getEmptyChunk();
-
-            for(int i = 0; i < de.Length; i++)
-            {
-                Console.Write($"{de[i]} ");
-            }
-
-            // Do dec to chunk conversion //
-            Vector3 cord = new Vector3(0f, 0f, 0f);
-            int typeLast = 0;
-            string type = "cord";
-
-            for (int i = 0; i < de.Length; i++)
-            {
-                int code = de[i];
-                if (code == 254 && type != "cord")
-                {
-                    type = "type";
-                    i++;
-                    if (cord.Z > 0) cord.Z--;
-                    for (int t = 0; t < de[i]; t++)
-                    {
-                        formed[(int)cord.X][(int)cord.Y][(int)cord.Z] = typeLast;
-                        cord.Z++;
-                    }
-                    continue;
-
-                }
-                if (code == 255)
-                {
-                    type = "cord";
-                    typeLast = 0;
-                    cord.Z = 0;
-                    continue;
-                }
-                else if (type == "cord")
-                {
-                    cord.X = (int)Math.Floor((double)(code / 16));
-                    cord.Y = code % 16;
-                    type = "type";
-                    continue;
-                }
-                if (type == "type")
-                {
-                    int t_type = 0;
-                    if (code != 0)
-                    {
-                        t_type += code * 16;
-                        i++;
-                        t_type += de[i];
-                    }
-                    typeLast = t_type;
-                    formed[(int)cord.X][(int)cord.Y][(int)cord.Z] = t_type;
-                    cord.Z++;
-                }
-            }
-
-            // for (int y = 0; y < 16; y++)
-            // {
-            //     for (int x = 0; x < 16; x++)
-            //     {
-            //         for (int z = 0; z < 16; z++)
-            //         {
-            //             int t = formed[z][y][x];
-            //             string efuck = "";
-            //             if (t > 0) 
-            //             {
-            //                 efuck = $"{t - 15}";
-            //             }
-            //             else if(t == 0) {
-            //                 efuck = " "; 
-            //             }
-                        
-            //             Console.Write(efuck);
-            //             Console.Write("  ");
-            //         }
-            //         Console.WriteLine();
-            //     }
-            //     Console.WriteLine("-------------------------------------------------");
-            // }
-
-            return new Chunk(id, formed);
-        }
-        public static int[][][] getEmptyChunk()
-        {
-            int[][][] ou = new int[16][][];
-            for (int x = 0; x < 16; x++)
-            {
-                ou[x] = new int[16][];
-                for (int y = 0; y < 16; y++) ou[x][y] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-            }
-            return ou;
-        }
-        public static int[] GetChunkBin(string world, string chunk, out string id)
-        {
-            id = chunk;
             string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
             if (!File.Exists(dataPath))
             {
-                Console.WriteLine($"Player data file not found: {dataPath}");
-                return [];
+                Console.WriteLine($"Error: File not found at '{dataPath}'");
+                return new Chunk(chunk, GetEmptyChunk());
             }
 
             byte[] bn = File.ReadAllBytes(dataPath);
-            int[] de = new int[bn.Length];
-            for (int i = 0; i < bn.Length; i++)
+            const int ROW_LEN = 16;
+
+            // formed[x][y][z] where:
+            // x = left/right (0..15)
+            // y = up/down  (0..15)
+            // z = forward/back (0..15)
+            int[][][] formed = GetEmptyChunk();
+
+            int pos = 0;
+            while (pos < bn.Length)
             {
-                de[i] = Convert.ToInt32(bn[i]);
+                // Read header byte: high nibble = x, low nibble = y
+                byte header = bn[pos++];
+                int x = (header >> 4) & 0x0F;
+                int y = header & 0x0F;
+
+                // Expand the row into exactly ROW_LEN values (top->bottom)
+                List<int> expanded = new List<int>(ROW_LEN);
+                int lastBlock = 0;
+                bool haveLastBlock = false;
+
+                while (pos < bn.Length)
+                {
+                    byte token = bn[pos++];
+
+                    if (token == 0xFF)
+                    {
+                        // End of this row
+                        break;
+                    }
+
+                    if (token == 0xFE)
+                    {
+                        if (pos >= bn.Length) throw new Exception("Unexpected EOF after 0xFE");
+                        int extra = bn[pos++]; // number of extra duplicates
+                        if (!haveLastBlock)
+                        {
+                            // No previous block: treat repeats as zeros
+                            for (int r = 0; r < extra; r++) expanded.Add(0);
+                        }
+                        else
+                        {
+                            for (int r = 0; r < extra; r++) expanded.Add(lastBlock);
+                        }
+                        continue;
+                    }
+
+                    // token is type byte; next byte is meta
+                    if (pos >= bn.Length) throw new Exception("Unexpected EOF while expecting meta byte");
+                    byte meta = bn[pos++];
+                    int blockValue = (token << 4) + meta; // packing consistent with writer
+                    expanded.Add(blockValue);
+                    lastBlock = blockValue;
+                    haveLastBlock = true;
+                }
+
+                // Normalize length
+                while (expanded.Count < ROW_LEN) expanded.Add(0);
+                if (expanded.Count > ROW_LEN) expanded = expanded.Take(ROW_LEN).ToList();
+
+                // Map expanded to z axis: expanded[0] -> z=15 (top), expanded[15] -> z=0 (bottom)
+                for (int k = 0; k < ROW_LEN; k++)
+                {
+                    formed[15-k][y][x] = expanded[k];
+                }
             }
-            return de;
+
+            // Debug print (optional)
+            
+            for (int yy = 0; yy < 16; yy++)
+            {
+                for (int xx = 0; xx < 16; xx++)
+                {
+                    for (int zz = 0; zz < 16; zz++)
+                    {
+                        Console.Write($"{formed[xx][yy][zz],4}");
+                    }
+                    Console.WriteLine();
+                }
+                Console.WriteLine("------------------------------------------------");
+            }
+            
+
+            return new Chunk(chunk, formed);
+        }
+
+        // Correct GetEmptyChunk: returns int[16][16][16] initialized to zeros.
+        public static int[][][] GetEmptyChunk()
+        {
+            int size = 16;
+            int[][][] ou = new int[size][][];
+
+            for (int x = 0; x < size; x++)
+            {
+                ou[x] = new int[size][];
+                for (int y = 0; y < size; y++)
+                {
+                    ou[x][y] = new int[size]; // automatically zeros
+                }
+            }
+
+            return ou;
         }
     }
+
     public class Chunk
     {
         public string id { get; set; }
