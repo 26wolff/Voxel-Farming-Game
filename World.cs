@@ -8,7 +8,9 @@ namespace Program
     public static class World
     {
         public static List<Chunk> ChunkStorage = new List<Chunk>();
-        public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>();
+
+        // Use custom comparer for int[] keys
+        public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>(new IntArrayComparer());
 
         private static string heldPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -19,40 +21,45 @@ namespace Program
 
         public static void Init()
         {
-
             Console.WriteLine(LoadChunk(0, 0, 0));
+            Console.WriteLine(GetChunkData(0, 0, 0)[8][0][8]);
+            Console.WriteLine(LoadChunk(1, 0, 0));
+            Console.WriteLine(GetChunkData(1, 0, 0)[8][0][8]);
+
             foreach (int[] key in Indexies.Keys)
             {
-                Console.WriteLine(String.Join(",", key));
+                Console.WriteLine(string.Join(",", key));
                 Console.WriteLine(Indexies[key]);
                 Console.WriteLine(ChunkStorage[Indexies[key]]);
             }
-            GetChunkData(0, 0, 0);
         }
-        public static int[][][] GetChunkData(int cx,int cy,int cz)
+
+        public static int[][][] GetChunkData(int cx, int cy, int cz)
         {
-            if(Indexies.TryGetValue([cx,cy,cz], out int spare)) // FAIL HERE _________________
+            int[] key = [cx, cy, cz];
+
+            if (Indexies.ContainsKey(key))
             {
-                // Exists, writing over it
                 Console.WriteLine("PASS");
-                return ChunkStorage[spare].data;
-                
+                return ChunkStorage[Indexies[key]].data;
             }
             else
             {
-                // Does not exist, adding to it
                 Console.WriteLine("CHUNK FAILED");
                 return GetEmptyChunk();
             }
-
         }
-        public static bool LoadChunk(int cx,int cy,int cz, string? WorldOveride = null)
+
+        public static bool LoadChunk(int cx, int cy, int cz, string? WorldOveride = null)
         {
             if (WorldOveride == null) WorldOveride = Player.World;
+
             int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}");
             Chunk New = new Chunk([cx, cy, cz], Data);
 
-            if(Indexies.TryGetValue([cx,cy,cz], out int spare))
+            int[] key = [cx, cy, cz];
+
+            if (Indexies.TryGetValue(key, out int spare))
             {
                 // Exists, writing over it
                 ChunkStorage[spare] = New;
@@ -60,12 +67,13 @@ namespace Program
             else
             {
                 // Does not exist, adding to it
-                Indexies.Add([cx, cy, cz], ChunkStorage.Count);
+                Indexies.Add(key, ChunkStorage.Count);
                 ChunkStorage.Add(New);
             }
-            
+
             return true;
         }
+
         public static int[][][] FormatChunkData(string world, string chunk)
         {
             string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
@@ -78,18 +86,15 @@ namespace Program
             byte[] bn = File.ReadAllBytes(dataPath);
             const int ROW_LEN = 16;
 
-            // formed[x][y][z] where:
             int[][][] formed = GetEmptyChunk();
 
             int pos = 0;
             while (pos < bn.Length)
             {
-                // Read header byte: high nibble = x, low nibble = y
                 byte header = bn[pos++];
                 int x = (header >> 4) & 0x0F;
                 int y = header & 0x0F;
 
-                // Expand the row into exactly ROW_LEN values (top->bottom)
                 List<int> expanded = new List<int>(ROW_LEN);
                 int lastBlock = 0;
                 bool haveLastBlock = false;
@@ -99,47 +104,33 @@ namespace Program
                     byte token = bn[pos++];
 
                     if (token == 0xFF)
-                    {
-                        // End of this row
                         break;
-                    }
 
                     if (token == 0xFE)
                     {
                         if (pos >= bn.Length) throw new Exception("Unexpected EOF after 0xFE");
-                        int extra = bn[pos++]; // number of extra duplicates
-                        if (!haveLastBlock)
-                        {
-                            // No previous block: treat repeats as zeros
-                            for (int r = 0; r < extra; r++) expanded.Add(0);
-                        }
-                        else
-                        {
-                            for (int r = 0; r < extra; r++) expanded.Add(lastBlock);
-                        }
+                        int extra = bn[pos++];
+                        for (int r = 0; r < extra; r++)
+                            expanded.Add(haveLastBlock ? lastBlock : 0);
                         continue;
                     }
 
-                    // token is type byte; next byte is meta
                     if (pos >= bn.Length) throw new Exception("Unexpected EOF while expecting meta byte");
                     byte meta = bn[pos++];
-                    int blockValue = (token << 4) + meta; // packing consistent with writer
+                    int blockValue = (token << 4) + meta;
                     expanded.Add(blockValue);
                     lastBlock = blockValue;
                     haveLastBlock = true;
                 }
 
-                // Normalize length
                 while (expanded.Count < ROW_LEN) expanded.Add(0);
                 if (expanded.Count > ROW_LEN) expanded = expanded.Take(ROW_LEN).ToList();
 
-                // Map expanded to z axis: expanded[0] -> z=15 (top), expanded[15] -> z=0 (bottom)
                 for (int k = 0; k < ROW_LEN; k++)
                 {
-                    formed[15-k][y][x] = expanded[k];
+                    formed[15 - k][y][x] = expanded[k];
                 }
             }
-            
 
             return formed;
         }
@@ -159,7 +150,7 @@ namespace Program
                 Console.WriteLine("------------------------------------------------");
             }
         }
-        // Correct GetEmptyChunk: returns int[16][16][16] initialized to zeros.
+
         public static int[][][] GetEmptyChunk()
         {
             int size = 16;
@@ -170,7 +161,7 @@ namespace Program
                 ou[x] = new int[size][];
                 for (int y = 0; y < size; y++)
                 {
-                    ou[x][y] = new int[size]; // automatically zeros
+                    ou[x][y] = new int[size];
                 }
             }
 
@@ -182,10 +173,40 @@ namespace Program
     {
         public int[] id { get; set; }
         public int[][][] data { get; set; }
+
         public Chunk(int[] Id, int[][][] Data)
         {
             id = Id;
             data = Data;
         }
     }
+
+    // 👇 Added comparer for int[] dictionary keys
+    public class IntArrayComparer : IEqualityComparer<int[]>
+    {
+        public bool Equals(int[]? a, int[]? b)
+        {
+            if (ReferenceEquals(a, b)) return true;
+            if (a == null || b == null || a.Length != b.Length) return false;
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (a[i] != b[i]) return false;
+            }
+            return true;
+        }
+
+        public int GetHashCode(int[] obj)
+        {
+            unchecked
+            {
+                int hash = 17;
+                foreach (int val in obj)
+                    hash = hash * 23 + val.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    // Dummy Player class for testing — remove if already defined elsewhere
+   
 }
