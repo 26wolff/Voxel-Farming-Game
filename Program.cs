@@ -31,7 +31,7 @@ namespace Program
             _drawManager = new DrawManager();
             _inputManager = new InputManager();
 
-            GameDataSync.Reset(true);
+            //GameDataSync.Reset(true);
             GameDataSync.Sync();
 
             Player.Init();
@@ -77,6 +77,9 @@ namespace Program
 
             if (_inputManager.F11) Player.Save();
 
+        
+            //Console.WriteLine(World.GetChunkData(0,0,0));
+            
             _updateManager.Update(gameTime, _inputManager);
             base.Update(gameTime);
         }

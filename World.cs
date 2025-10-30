@@ -7,6 +7,9 @@ namespace Program
 {
     public static class World
     {
+        public static List<Chunk> ChunkStorage = new List<Chunk>();
+        public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>();
+
         private static string heldPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "VoxelFarm",
@@ -16,26 +19,66 @@ namespace Program
 
         public static void Init()
         {
-            Console.WriteLine("T");
-            Chunk tc = FormatChunkData("w-1", "0_0_0");
-        }
 
-        public static Chunk FormatChunkData(string world, string chunk)
+            Console.WriteLine(LoadChunk(0, 0, 0));
+            foreach (int[] key in Indexies.Keys)
+            {
+                Console.WriteLine(String.Join(",", key));
+                Console.WriteLine(Indexies[key]);
+                Console.WriteLine(ChunkStorage[Indexies[key]]);
+            }
+            GetChunkData(0, 0, 0);
+        }
+        public static int[][][] GetChunkData(int cx,int cy,int cz)
+        {
+            if(Indexies.TryGetValue([cx,cy,cz], out int spare)) // FAIL HERE _________________
+            {
+                // Exists, writing over it
+                Console.WriteLine("PASS");
+                return ChunkStorage[spare].data;
+                
+            }
+            else
+            {
+                // Does not exist, adding to it
+                Console.WriteLine("CHUNK FAILED");
+                return GetEmptyChunk();
+            }
+
+        }
+        public static bool LoadChunk(int cx,int cy,int cz, string? WorldOveride = null)
+        {
+            if (WorldOveride == null) WorldOveride = Player.World;
+            int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}");
+            Chunk New = new Chunk([cx, cy, cz], Data);
+
+            if(Indexies.TryGetValue([cx,cy,cz], out int spare))
+            {
+                // Exists, writing over it
+                ChunkStorage[spare] = New;
+            }
+            else
+            {
+                // Does not exist, adding to it
+                Indexies.Add([cx, cy, cz], ChunkStorage.Count);
+                ChunkStorage.Add(New);
+            }
+            
+            return true;
+        }
+        public static int[][][] FormatChunkData(string world, string chunk)
         {
             string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
             if (!File.Exists(dataPath))
             {
                 Console.WriteLine($"Error: File not found at '{dataPath}'");
-                return new Chunk(chunk, GetEmptyChunk());
+                return GetEmptyChunk();
             }
 
             byte[] bn = File.ReadAllBytes(dataPath);
             const int ROW_LEN = 16;
 
             // formed[x][y][z] where:
-            // x = left/right (0..15)
-            // y = up/down  (0..15)
-            // z = forward/back (0..15)
             int[][][] formed = GetEmptyChunk();
 
             int pos = 0;
@@ -96,26 +139,26 @@ namespace Program
                     formed[15-k][y][x] = expanded[k];
                 }
             }
-
-            // Debug print (optional)
             
+
+            return formed;
+        }
+
+        public static void LogChunk(int[][][] data)
+        {
             for (int yy = 0; yy < 16; yy++)
             {
                 for (int xx = 0; xx < 16; xx++)
                 {
                     for (int zz = 0; zz < 16; zz++)
                     {
-                        Console.Write($"{formed[xx][yy][zz],4}");
+                        Console.Write($"{data[xx][yy][zz],4}");
                     }
                     Console.WriteLine();
                 }
                 Console.WriteLine("------------------------------------------------");
             }
-            
-
-            return new Chunk(chunk, formed);
         }
-
         // Correct GetEmptyChunk: returns int[16][16][16] initialized to zeros.
         public static int[][][] GetEmptyChunk()
         {
@@ -137,9 +180,9 @@ namespace Program
 
     public class Chunk
     {
-        public string id { get; set; }
+        public int[] id { get; set; }
         public int[][][] data { get; set; }
-        public Chunk(string Id, int[][][] Data)
+        public Chunk(int[] Id, int[][][] Data)
         {
             id = Id;
             data = Data;

@@ -9,6 +9,7 @@ namespace Program
     {
         public static Vector3 Position = Vector3.Zero;
         public static Vector2 ViewAngle = Vector2.Zero;
+        public static string World = "w-1";
 
         // Path in AppData\Local\VoxelFarm\Data\Player\PlayerData.json
         private static string dataPath = Path.Combine(
