@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Diagnostics;
+
 
 namespace Program
 {
@@ -22,40 +24,59 @@ namespace Program
         public static void Init()
         {
             Console.WriteLine(LoadChunk(0, 0, 0));
-            Console.WriteLine(GetChunkData(0, 0, 0)[8][0][8]);
+            Console.WriteLine(GetChunkData(0, 0, 0)?.data[8][0][8]);
             Console.WriteLine(LoadChunk(1, 0, 0));
-            Console.WriteLine(GetChunkData(1, 0, 0)[8][0][8]);
+            Console.WriteLine(GetChunkData(1, 0, 0)?.data[8][0][8]);
 
-            foreach (int[] key in Indexies.Keys)
+        }
+        public static int[][] GetChunksToRender()
+        {
+            int[] playerChunk = [(int)Math.Floor(Player.Position.X / 16), (int)Math.Floor(Player.Position.Y / 16), (int)Math.Floor(Player.Position.Z / 16)];
+            int renderDist = Player.renderDistance;
+            int render2x = renderDist * renderDist;
+            List<int[]> result = new List<int[]>();
+            for (int x = -renderDist; x <= renderDist; x++)
             {
-                Console.WriteLine(string.Join(",", key));
-                Console.WriteLine(Indexies[key]);
-                Console.WriteLine(ChunkStorage[Indexies[key]]);
+                for (int z = -renderDist; z <= renderDist; z++)
+                {
+                    if (x * x + z * z <= render2x + 1) result.Add([x+playerChunk[0], playerChunk[1], z+playerChunk[2]]);
+                }
             }
+            int[][] intListResult = new int[result.Count][];
+            for(int i = 0; i < result.Count; i++)
+            {
+                intListResult[i] = result[i];
+            }
+            return intListResult;
+        }
+        public static int[] GetBlocksToRender(int[] chunkCord)
+        {
+
+            return [];
         }
 
-        public static int[][][] GetChunkData(int cx, int cy, int cz)
+        public static Chunk? GetChunkData(int cx, int cy, int cz)
         {
             int[] key = [cx, cy, cz];
 
             if (Indexies.ContainsKey(key))
             {
                 Console.WriteLine("PASS");
-                return ChunkStorage[Indexies[key]].data;
+                return ChunkStorage[Indexies[key]];
             }
             else
             {
                 Console.WriteLine("CHUNK FAILED");
-                return GetEmptyChunk();
+                return null;
             }
         }
 
         public static bool LoadChunk(int cx, int cy, int cz, string? WorldOveride = null)
         {
             if (WorldOveride == null) WorldOveride = Player.World;
-
-            int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}");
-            Chunk New = new Chunk([cx, cy, cz], Data);
+            bool empty;
+            int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}", out empty);
+            Chunk New = new Chunk([cx, cy, cz], Data,empty);
 
             int[] key = [cx, cy, cz];
 
@@ -74,19 +95,21 @@ namespace Program
             return true;
         }
 
-        public static int[][][] FormatChunkData(string world, string chunk)
+        public static int[][][] FormatChunkData(string world, string chunk, out bool empty)
         {
+            empty = false;
             string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
             if (!File.Exists(dataPath))
             {
                 Console.WriteLine($"Error: File not found at '{dataPath}'");
-                return GetEmptyChunk();
+                empty = true;
+                return GetEmptyChunkData();
             }
 
             byte[] bn = File.ReadAllBytes(dataPath);
             const int ROW_LEN = 16;
 
-            int[][][] formed = GetEmptyChunk();
+            int[][][] formed = GetEmptyChunkData();
 
             int pos = 0;
             while (pos < bn.Length)
@@ -151,7 +174,7 @@ namespace Program
             }
         }
 
-        public static int[][][] GetEmptyChunk()
+        public static int[][][] GetEmptyChunkData()
         {
             int size = 16;
             int[][][] ou = new int[size][][];
@@ -172,12 +195,17 @@ namespace Program
     public class Chunk
     {
         public int[] id { get; set; }
-        public int[][][] data { get; set; }
+        public int[][][] data { get; set; } = { };
+        public bool empty { get; }
 
-        public Chunk(int[] Id, int[][][] Data)
+        public Chunk(int[] Id, int[][][] Data, bool Empty)
         {
+            empty = Empty;
             id = Id;
-            data = Data;
+            if (!empty)
+            {
+                data = Data;
+            }
         }
     }
 

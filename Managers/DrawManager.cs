@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.IO;
+using System.Runtime.Intrinsics.X86;
 
 namespace Program
 {
@@ -40,6 +41,11 @@ namespace Program
             }
 
             Console.WriteLine($"Loaded image from: {imagePath}");
+            int[][] result = World.GetChunksToRender();
+            foreach(int[] tr in result)
+            {
+                Console.WriteLine($"{tr[0]}, {tr[1]}, {tr[2]}");
+            }
         }
 
         public void Draw(GameTime gameTime, UpdateManager update)
@@ -61,10 +67,11 @@ namespace Program
                 effects: SpriteEffects.None,
                 layerDepth: 0f
             );
-            
-            
+
+
 
             _spriteBatch.End();
         }
+        
     }
 }

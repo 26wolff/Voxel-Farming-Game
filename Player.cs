@@ -9,6 +9,7 @@ namespace Program
     {
         public static Vector3 Position = Vector3.Zero;
         public static Vector2 ViewAngle = Vector2.Zero;
+        public static int renderDistance = 3;
         public static string World = "w-1";
 
         // Path in AppData\Local\VoxelFarm\Data\Player\PlayerData.json
@@ -27,7 +28,7 @@ namespace Program
                 Console.WriteLine($"Player data file not found: {dataPath}");
                 return;
             }
-
+            Position.X = 100f;
             string jsonString = File.ReadAllText(dataPath);
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
