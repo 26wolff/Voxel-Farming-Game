@@ -49,12 +49,12 @@ namespace Program
             Console.WriteLine($"Loaded player position: {Position}");
         }
 
-        public static void Update(float dt, InputManager input)
+        public static void Update(float dt)
         {
-            if (input.Right) Position.X += 0.5f*dt;
-            if (input.Left) Position.X -= 0.5f*dt;
-            if (input.Up) Position.Y -= 0.5f*dt;
-            if (input.Down) Position.Y += 0.5f*dt;
+            // if (input.Right) Position.X += 0.5f*dt;
+            // if (input.Left) Position.X -= 0.5f*dt;
+            // if (input.Up) Position.Y -= 0.5f*dt;
+            // if (input.Down) Position.Y += 0.5f*dt;
         }
 
         public static void Save()

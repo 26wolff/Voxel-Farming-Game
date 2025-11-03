@@ -14,12 +14,7 @@ namespace Program
     public class GameCore : Game
     {
         private GraphicsDeviceManager _graphics;
-        private SpriteBatch? _spriteBatch;
 
-        // Managers
-        private UpdateManager _updateManager;
-        private DrawManager _drawManager;
-        private InputManager _inputManager;
 
         public GameCore()
         {
@@ -27,13 +22,14 @@ namespace Program
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
 
-            _updateManager = new UpdateManager();
-            _drawManager = new DrawManager();
-            _inputManager = new InputManager();
+            
 
             //GameDataSync.Reset(true);
             GameDataSync.Sync();
 
+            UpdateManager.Init();
+            DrawManager.Init();
+            InputManager.Init();
             Player.Init();
             World.Init();
 
@@ -48,6 +44,7 @@ namespace Program
             Screen.Aspect = Window.ClientBounds.Width / Screen.Resolution;
             Console.WriteLine($"Resolution updated: {Screen.Resolution}, Aspect updated: {Screen.Aspect}");
         }
+
         private void SetWindowedMode(int Resolution = 500)
         {
             Screen.Resolution = Resolution;
@@ -61,33 +58,15 @@ namespace Program
             Window.Position = new Point(100, 100);
         }
 
-        protected override void LoadContent()
-        {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            _drawManager.LoadContent(GraphicsDevice, _spriteBatch);//, Content); // <-- Pass Content
-
-            Console.WriteLine($"Current screen size: {_graphics.PreferredBackBufferWidth}x{_graphics.PreferredBackBufferHeight}");
-        }
-
         protected override void Update(GameTime gameTime)
         {
-            _inputManager.HandleInput();
-
-            if (_inputManager.Exit) Exit();
-
-            if (_inputManager.F11) Player.Save();
-
-        
-            //Console.WriteLine(World.GetChunkData(0,0,0));
-            
-            _updateManager.Update(gameTime, _inputManager);
             base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            _drawManager.Draw(gameTime, _updateManager);
+            DrawManager.Draw();
             base.Draw(gameTime);
         }
 

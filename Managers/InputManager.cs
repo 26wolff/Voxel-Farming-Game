@@ -2,32 +2,27 @@ using Microsoft.Xna.Framework.Input;
 
 namespace Program
 {
-    public class InputManager
+    public static class InputManager
     {
-        public bool Up { get; private set; }
-        public bool Down { get; private set; }
-        public bool Left { get; private set; }
-        public bool Right { get; private set; }
-        public bool Exit { get; private set; }
-        public bool F11 { get; private set; }
+        // Each [keyCode][0] = isPressed, [keyCode][1] = justReleased
+        public static bool[][] KeysState = new bool[256][];  // 256 to cover most key codes
+        public static MouseForm MouseState = new MouseForm();
 
-        public void HandleInput()
+        public static void Init()
+        {
+            // Initialize 2D array
+            for (int i = 0; i < KeysState.Length; i++)
+                KeysState[i] = new bool[2];
+        }
+        public static void Update()
         {
             var keyboard = Keyboard.GetState();
-
-            Up = keyboard.IsKeyDown(Keys.Up);
-            Down = keyboard.IsKeyDown(Keys.Down);
-            Left = keyboard.IsKeyDown(Keys.Left);
-            Right = keyboard.IsKeyDown(Keys.Right);
-            Exit = keyboard.IsKeyDown(Keys.Escape);
-            F11 = keyboard.IsKeyDown(Keys.F11);
-
+            var mouse = Mouse.GetState();
 
         }
     }
-    public class Key
+    public class MouseForm
     {
-        public bool IsDown { get; set; } = false;
-        public bool IsUsed { get; set; } = false;
+        
     }
 }

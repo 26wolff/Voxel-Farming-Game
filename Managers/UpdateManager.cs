@@ -2,12 +2,17 @@ using Microsoft.Xna.Framework;
 
 namespace Program
 {
-    public class UpdateManager
+    public static class UpdateManager
     {
-
-        public void Update(GameTime gameTime, InputManager input)
+        public static void Init()
         {
-            Player.Update((float)gameTime.ElapsedGameTime.TotalSeconds, input);
+            
+        }
+        
+        public static void Update(GameTime gameTime)
+        {
+            InputManager.Update();
+            Player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             
         }
     }
