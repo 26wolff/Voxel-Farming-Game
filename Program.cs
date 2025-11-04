@@ -15,23 +15,27 @@ namespace Program
     {
         private GraphicsDeviceManager _graphics;
 
+        private SpriteBatch _spriteBatch;
 
         public GameCore()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-
             
-
+        }
+        protected override void LoadContent()
+        {
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
             //GameDataSync.Reset(true);
             GameDataSync.Sync();
 
-            UpdateManager.Init();
-            DrawManager.Init();
-            InputManager.Init();
-            Player.Init();
             World.Init();
+            Player.Init();
+
+            UpdateManager.Init();
+            DrawManager.Init(GraphicsDevice,_spriteBatch);
+            InputManager.Init();
 
             SetWindowedMode();
             Window.AllowUserResizing = true;
