@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Numerics;
+using Microsoft.Xna.Framework.Input;
 
 namespace Program
 {
@@ -28,7 +29,6 @@ namespace Program
                 Console.WriteLine($"Player data file not found: {dataPath}");
                 return;
             }
-            Position.X = 100f;
             string jsonString = File.ReadAllText(dataPath);
 
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
@@ -47,16 +47,32 @@ namespace Program
                 }
             }
             Console.WriteLine($"Loaded player position: {Position}");
+            Position.Y = 4f;
+
         }
 
         public static void Update(float dt)
         {
-            // if (input.Right) Position.X += 0.5f*dt;
-            // if (input.Left) Position.X -= 0.5f*dt;
-            // if (input.Up) Position.Y -= 0.5f*dt;
-            // if (input.Down) Position.Y += 0.5f*dt;
-        }
+            
+            if (InputManager.Key[(int)Keys.D])
+            {
+                Position.X += 0.5f * dt;
+            }
+            if (InputManager.Key[(int)Keys.A])
+            {
+                Position.X -= 0.5f * dt;
+            }
+            if (InputManager.Key[(int)Keys.W])
+            {
+                Position.Z += 0.5f * dt;
+            }
+            if (InputManager.Key[(int)Keys.S])
+            {
+                Position.Z -= 0.5f * dt;
+            }
 
+
+        }
         public static void Save()
         {
             // Ensure the directory exists

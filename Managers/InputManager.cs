@@ -4,20 +4,38 @@ namespace Program
 {
     public static class InputManager
     {
-        // Each [keyCode][0] = isPressed, [keyCode][1] = justReleased
-        public static bool[][] KeysState = new bool[256][];  // 256 to cover most key codes
+        public static bool[] Key = new bool[255];
+        private static KeyboardState _currentKeyboardState;
+        private static KeyboardState _previousKeyboardState;        
         public static MouseForm MouseState = new MouseForm();
 
         public static void Init()
         {
             // Initialize 2D array
-            for (int i = 0; i < KeysState.Length; i++)
-                KeysState[i] = new bool[2];
+            _previousKeyboardState = Keyboard.GetState();
+
         }
         public static void Update()
         {
-            var keyboard = Keyboard.GetState();
-            var mouse = Mouse.GetState();
+            _previousKeyboardState = _currentKeyboardState;
+            _currentKeyboardState = Keyboard.GetState();
+            foreach (Keys key in Enum.GetValues(typeof(Keys)))
+            {
+                Key[(int)key] = _currentKeyboardState.IsKeyDown(key);
+                if (_previousKeyboardState.IsKeyDown(key) && _currentKeyboardState.IsKeyUp(key))
+                {
+                    // key up
+                    Console.WriteLine($"Key: {key}, Value: {(int)key} UP");
+
+                }
+                if (_previousKeyboardState.IsKeyUp(key) && _currentKeyboardState.IsKeyDown(key))
+                {
+                    // key up
+                    Console.WriteLine($"Key: {key}, Value: {(int)key} DOWN");
+
+                }
+
+            }
 
         }
     }

@@ -3,13 +3,15 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics;
-
+using System.Numerics;
+using System.Text.Json;
 
 namespace Program
 {
     public static class World
     {
         public static List<Chunk> ChunkStorage = new List<Chunk>();
+        public static WorldStorage WorldData = new WorldStorage(0,0,0);
 
         // Use custom comparer for int[] keys
         public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>(new IntArrayComparer());
@@ -23,10 +25,36 @@ namespace Program
 
         public static void Init()
         {
-            Console.WriteLine(LoadChunk(0, 0, 0));
-            Console.WriteLine(GetChunkData(0, 0, 0)?.data[8][0][8]);
-            Console.WriteLine(LoadChunk(1, 0, 0));
-            Console.WriteLine(GetChunkData(1, 0, 0)?.data[8][0][8]);
+            LoadWorld("w-1");
+
+        }
+        public static void LoadWorld(string world)
+        {
+            Player.Position = new Vector3(4f, 4f, 4f);
+
+            string dataPath = Path.Combine(heldPath, world, $"{world}.json");
+            if (!File.Exists(dataPath))
+            {
+                Console.WriteLine($"Error: File not found at '{dataPath}'");
+            }
+            string jsonString = File.ReadAllText(dataPath);
+
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            var TWorldData = JsonSerializer.Deserialize<WorldStorageGetSet>(jsonString, options);
+            if (TWorldData != null)
+            {
+                {
+                    WorldData = new WorldStorage(
+                        TWorldData.XLen,
+                        TWorldData.YLen,
+                        TWorldData.ZLen
+                    );
+                }
+            }
+
+            int[][] toLoad = GetChunksToRender();
+            foreach (int[] t in toLoad) Console.WriteLine($"{t[0]}, {t[1]}, {t[2]}");
 
         }
         public static int[][] GetChunksToRender()
@@ -37,13 +65,15 @@ namespace Program
             List<int[]> result = new List<int[]>();
             for (int x = -renderDist; x <= renderDist; x++)
             {
+                if (x < 0 || x > WorldData.XLen) continue;
                 for (int z = -renderDist; z <= renderDist; z++)
                 {
-                    if (x * x + z * z <= render2x + 1) result.Add([x+playerChunk[0], playerChunk[1], z+playerChunk[2]]);
+                    if (z < 0 || z > WorldData.ZLen) continue;
+                    if (x * x + z * z <= render2x + 1) result.Add([x + playerChunk[0], playerChunk[1], z + playerChunk[2]]);
                 }
             }
             int[][] intListResult = new int[result.Count][];
-            for(int i = 0; i < result.Count; i++)
+            for (int i = 0; i < result.Count; i++)
             {
                 intListResult[i] = result[i];
             }
@@ -76,7 +106,7 @@ namespace Program
             if (WorldOveride == null) WorldOveride = Player.World;
             bool empty;
             int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}", out empty);
-            Chunk New = new Chunk([cx, cy, cz], Data,empty);
+            Chunk New = new Chunk([cx, cy, cz], Data, empty);
 
             int[] key = [cx, cy, cz];
 
@@ -209,6 +239,26 @@ namespace Program
         }
     }
 
+    public class WorldStorage
+    {
+        public int XLen;
+        public int YLen;
+        public int ZLen;
+        public WorldStorage(int xlen, int ylen, int zlen)
+        {
+            XLen = xlen;
+            YLen = ylen;
+            ZLen = zlen;
+        }
+    }
+    public class WorldStorageGetSet
+    {
+        public int XLen { get; set; }
+        public int YLen { get; set; }
+        public int ZLen { get; set; }
+    }
+   
+
     // 👇 Added comparer for int[] dictionary keys
     public class IntArrayComparer : IEqualityComparer<int[]>
     {
@@ -236,5 +286,5 @@ namespace Program
     }
 
     // Dummy Player class for testing — remove if already defined elsewhere
-   
+
 }

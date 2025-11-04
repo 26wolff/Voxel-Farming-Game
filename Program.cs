@@ -60,6 +60,7 @@ namespace Program
 
         protected override void Update(GameTime gameTime)
         {
+            UpdateManager.Update(gameTime);
             base.Update(gameTime);
         }
 
