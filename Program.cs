@@ -8,14 +8,16 @@ namespace Program
     public static class Screen
     {
         public static float Aspect { get; set; } = 16f / 9f;
-        public static float Resolution { get; set; } = 0;
+        public static float Width { get; set; } = 0;
+        public static float Height { get; set; } = 0;
+
     }
 
     public class GameCore : Game
     {
         private GraphicsDeviceManager _graphics;
 
-        private SpriteBatch _spriteBatch;
+        private SpriteBatch? _spriteBatch;
 
         public GameCore()
         {
@@ -44,15 +46,17 @@ namespace Program
 
         private void OnWindowResize(object? sender, EventArgs e)
         {
-            Screen.Resolution = Window.ClientBounds.Height;
-            Screen.Aspect = Window.ClientBounds.Width / Screen.Resolution;
-            Console.WriteLine($"Resolution updated: {Screen.Resolution}, Aspect updated: {Screen.Aspect}");
+            Screen.Height = Window.ClientBounds.Height;
+            Screen.Width = Window.ClientBounds.Width;
+            Screen.Aspect = Screen.Width / Screen.Height;
+            Console.WriteLine($"Resolution updated: {Screen.Height} by {Screen.Width}, Aspect updated: {Screen.Aspect}");
         }
 
         private void SetWindowedMode(int Resolution = 500)
         {
-            Screen.Resolution = Resolution;
-            _graphics.PreferredBackBufferWidth = (int)(Resolution * Screen.Aspect);
+            Screen.Height = Resolution;
+            Screen.Width = Resolution * Screen.Aspect;
+            _graphics.PreferredBackBufferWidth = (int)Screen.Width;
             _graphics.PreferredBackBufferHeight = Resolution;
 
             _graphics.IsFullScreen = false;

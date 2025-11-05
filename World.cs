@@ -11,7 +11,8 @@ namespace Program
     public static class World
     {
         public static List<Chunk> ChunkStorage = new List<Chunk>();
-        public static WorldStorage WorldData = new WorldStorage(0,0,0);
+        public static WorldStorage WorldData = new WorldStorage(0, 0, 0);
+        public static bool[] LoadedChunks = { };
 
         // Use custom comparer for int[] keys
         public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>(new IntArrayComparer());
@@ -52,10 +53,22 @@ namespace Program
                     );
                 }
             }
-
-            int[][] toLoad = GetChunksToRender();
-            foreach (int[] t in toLoad) Console.WriteLine($"{t[0]}, {t[1]}, {t[2]}");
-
+            LoadedChunks = new bool[WorldData.XLen * WorldData.ZLen];
+            int[][] toLoad = GetWorldChunksID(WorldData);
+            foreach (int[] t in toLoad) LoadChunk(t[0], t[1], t[2]);
+        }
+        public static int[][] GetWorldChunksID(WorldStorage wData)
+        {
+            int[][] intListResult = new int[wData.XLen * wData.ZLen][];
+            for (int x = 0; x < wData.XLen; x++)
+            {
+                for (int z = 0; z < wData.ZLen; z++)
+                {
+                    intListResult[x * wData.XLen + z] = [x, 0, z];
+                    Console.WriteLine($"{x}, {z}");
+                }
+            }
+            return intListResult;
         }
         public static int[][] GetChunksToRender()
         {
@@ -101,14 +114,18 @@ namespace Program
             }
         }
 
-        public static bool LoadChunk(int cx, int cy, int cz, string? WorldOveride = null)
+        public static bool LoadChunk(int cx, int cy, int cz, string? WorldOveride = null, bool ChunkOveride = false)
         {
+            Console.WriteLine($"{cx}, {cz} loading");
             if (WorldOveride == null) WorldOveride = Player.World;
+            if (WorldData.XLen == 0 || WorldData.ZLen == 0) return false;
+            if (!ChunkOveride && LoadedChunks[cx * WorldData.XLen + cz]) return true;
             bool empty;
             int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}", out empty);
             Chunk New = new Chunk([cx, cy, cz], Data, empty);
 
             int[] key = [cx, cy, cz];
+            LoadedChunks[cx * WorldData.XLen + cz] =  true;
 
             if (Indexies.TryGetValue(key, out int spare))
             {
@@ -131,7 +148,7 @@ namespace Program
             string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
             if (!File.Exists(dataPath))
             {
-                Console.WriteLine($"Error: File not found at '{dataPath}'");
+                Console.WriteLine($"Error: File not found at '{chunk}'");
                 empty = true;
                 return GetEmptyChunkData();
             }

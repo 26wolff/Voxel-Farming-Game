@@ -51,6 +51,14 @@ namespace Program
 
         }
 
+        public static void OnKeyPress(Keys key)
+        {
+            if(key == Keys.A)
+            {
+                Console.WriteLine($"{Position.X}, {Position.Z}");
+            }
+        }
+
         public static void Update(float dt)
         {
             

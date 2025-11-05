@@ -30,7 +30,8 @@ namespace Program
                 }
                 if (_previousKeyboardState.IsKeyUp(key) && _currentKeyboardState.IsKeyDown(key))
                 {
-                    // key up
+                    // key down
+                    Player.OnKeyPress(key);
                     Console.WriteLine($"Key: {key}, Value: {(int)key} DOWN");
 
                 }

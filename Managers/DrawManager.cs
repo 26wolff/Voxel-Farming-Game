@@ -18,16 +18,25 @@ namespace Program
 
         public static void Draw()
         {
+            int[][] ToRender = World.GetChunksToRender();
             if (rep)
             {
                 Console.WriteLine("DREW");
+                foreach(var c in ToRender)
+                {
+                    Console.WriteLine($"{c[0]},{c[2]}");
+                }
+                Console.WriteLine();
+
+
+
                 rep = false;
             }
 
             // Example: draw a red square
             _spriteBatch!.Begin();
             var tex = CreateTexture(Color.Red);
-            _spriteBatch.Draw(tex, new Rectangle((int)(Player.Position.X*Screen.Resolution), (int)(Player.Position.Z*Screen.Resolution), 64, 64), Color.White);
+            _spriteBatch.Draw(tex, new Rectangle((int)(Player.Position.X*Screen.Width), (int)(-Player.Position.Z*Screen.Height), 64, 64), Color.White);
             _spriteBatch.End();
         }
 
