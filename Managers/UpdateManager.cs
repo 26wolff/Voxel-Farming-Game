@@ -9,10 +9,11 @@ namespace Program
             
         }
         
-        public static void Update(GameTime gameTime)
+        public static void Update(float dt)
         {
             InputManager.Update();
-            Player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+            Player.Update(dt);
+            Camera.Update();
             
         }
     }

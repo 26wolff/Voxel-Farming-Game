@@ -104,12 +104,12 @@ namespace Program
 
             if (Indexies.ContainsKey(key))
             {
-                Console.WriteLine("PASS");
+                //Console.WriteLine("PASS");
                 return ChunkStorage[Indexies[key]];
             }
             else
             {
-                Console.WriteLine("CHUNK FAILED");
+                //Console.WriteLine("CHUNK FAILED");
                 return null;
             }
         }

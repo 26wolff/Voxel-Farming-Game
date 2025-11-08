@@ -18,12 +18,17 @@ namespace Program
         private GraphicsDeviceManager _graphics;
 
         private SpriteBatch? _spriteBatch;
-
+        public int TargetFramesPerSecond = 180;
+        public float FPS = 0;
+        public int times = 0;
         public GameCore()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+            _graphics.SynchronizeWithVerticalRetrace = false; 
+            IsFixedTimeStep = false;
+            TargetElapsedTime = TimeSpan.FromMilliseconds(1000.0f / TargetFramesPerSecond);
             
         }
         protected override void LoadContent()
@@ -68,7 +73,16 @@ namespace Program
 
         protected override void Update(GameTime gameTime)
         {
-            UpdateManager.Update(gameTime);
+            float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            times++;
+            FPS += dt;
+            if(times >= TargetFramesPerSecond*5)
+            {
+                Console.WriteLine($"FPS: {1 / (FPS / times)}");
+                times = 0;
+                FPS = 0f;
+            }
+            UpdateManager.Update(dt);
             base.Update(gameTime);
         }
 

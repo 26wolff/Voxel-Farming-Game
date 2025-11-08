@@ -8,10 +8,12 @@ namespace Program
 {
     public static class Player
     {
-        public static Vector3 Position = Vector3.Zero;
+        public static Vector3 Position = new Vector3(0f, 20f, 0f);
         public static Vector2 ViewAngle = Vector2.Zero;
         public static int renderDistance = 3;
         public static string World = "w-1";
+        public static float Speed = 1;
+        public static Vector3 Normal;
 
         // Path in AppData\Local\VoxelFarm\Data\Player\PlayerData.json
         private static string dataPath = Path.Combine(
@@ -48,12 +50,13 @@ namespace Program
             }
             Console.WriteLine($"Loaded player position: {Position}");
             Position.Y = 4f;
+            Normal = GetNormalFromYawPitch(ViewAngle.X, ViewAngle.Y);
 
         }
 
         public static void OnKeyPress(Keys key)
         {
-            if(key == Keys.A)
+            if (key == Keys.A)
             {
                 Console.WriteLine($"{Position.X}, {Position.Z}");
             }
@@ -61,26 +64,16 @@ namespace Program
 
         public static void Update(float dt)
         {
+            if (InputManager.Key[(int)Keys.D]) { Position.X += Speed * dt; }
+            if (InputManager.Key[(int)Keys.A]) { Position.X -= Speed * dt; }
+            if (InputManager.Key[(int)Keys.W]) { Position.Z += Speed * dt; }
+            if (InputManager.Key[(int)Keys.S]) { Position.Z -= Speed * dt; }
+            if (InputManager.Key[(int)Keys.R]) { Position.Y -= Speed * dt; }
+            if (InputManager.Key[(int)Keys.F]) { Position.Y += Speed * dt; }
             
-            if (InputManager.Key[(int)Keys.D])
-            {
-                Position.X += 0.5f * dt;
-            }
-            if (InputManager.Key[(int)Keys.A])
-            {
-                Position.X -= 0.5f * dt;
-            }
-            if (InputManager.Key[(int)Keys.W])
-            {
-                Position.Z += 0.5f * dt;
-            }
-            if (InputManager.Key[(int)Keys.S])
-            {
-                Position.Z -= 0.5f * dt;
-            }
-
-
+            Normal = GetNormalFromYawPitch(ViewAngle.X, ViewAngle.Y);
         }
+
         public static void Save()
         {
             // Ensure the directory exists
@@ -114,6 +107,14 @@ namespace Program
             public float X { get; set; }
             public float Y { get; set; }
             public float Z { get; set; }
+        }
+        public static Vector3 GetNormalFromYawPitch(float yawRad, float pitchRad)
+        {// AAAAAAAA Make this in init and update for player, and acces in dferaw for face culling
+            double x = Math.Cos(yawRad) * Math.Cos(pitchRad);
+            double y = Math.Sin(pitchRad);
+            double z = Math.Sin(yawRad) * Math.Cos(pitchRad);
+
+            return Vector3.Normalize(new Vector3((float)x, (float)y, (float)z));
         }
     }
 }
