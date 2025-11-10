@@ -10,7 +10,7 @@ namespace Program
         private static SpriteBatch? _spriteBatch;
         private static GraphicsDevice? _graphicsDevice;
         private static bool rep = true;
-        public static int[][] CubeNormals = [[-1, 0, 0], [1, 0, 0], [0, -1, 0], [0, 1, 0], [0, 0, -1], [0, 0, 1]];
+        public static Vector3[] CubeNormals = [new Vector3(-1, 0, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 1, 0), new Vector3(0, 0, -1), new Vector3(0, 0, 1)];
 
         public static void Init(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
@@ -22,7 +22,7 @@ namespace Program
         {
             int[][] WorldToRender = World.GetChunksToRender();
             int[][] ToRender = Camera.GetChunksInVeiw(WorldToRender);
-            (Vector3[] Faces3dSpace, Color[] FaceColors) = GetFacesIn3dSpace(ToRender, rep);
+            Face[] Faces3dSpace = GetFacesIn3dSpace(ToRender, rep);
 
             //Get a list of not empty chunks that i am in veiw of
             if (rep)
@@ -52,7 +52,7 @@ namespace Program
             // Example: draw a red square
             _spriteBatch!.Begin();
             var tex = CreateTexture(Color.Red);
-            _spriteBatch.Draw(tex, new Rectangle((int)(Player.Position.X * Screen.Width), (int)(-Player.Position.Z * Screen.Height), 64, 64), Color.White);
+            _spriteBatch.Draw(tex, new Rectangle((int)(Player.Position.X * Screen.Height), (int)(-Player.Position.Z * Screen.Height), 64, 64), Color.White);
             _spriteBatch.End();
         }
 
@@ -69,10 +69,9 @@ namespace Program
             texture.SetData(new[] { color });
             return texture;
         }
-        public static (Vector3[] Faces3dSpace, Color[] FaceColors) GetFacesIn3dSpace(int[][] ToRender, bool log)
+        public static Face[]  GetFacesIn3dSpace(int[][] ToRender, bool log)
         {
-            List<Vector3> Faces3dSpace = new List<Vector3>();
-            List<Color> FaceColors = new List<Color>();
+            List<Face> Faces3dSpace = new List<Face>();
 
             foreach (int[] c in ToRender)
             {
@@ -83,25 +82,30 @@ namespace Program
                 }
                 for (int i = 0; i < 16 * 16 * 16; i++)
                 {
-                    int[] cord = [i % 16, (i / 16) % 16, i / (16 * 16)];
+                    Vector3 cord = new Vector3(i % 16 + 0.5f, (i / 16) % 16 + 0.5f, i / (16 * 16) + 0.5f);
                     int[] f = new int[3];
-                    int val = ChunkData.data[cord[0]][cord[1]][cord[2]];
+                    int val = ChunkData.data[(int)cord.X][(int)cord.Y][(int)cord.Z];
                     if (val == 0) continue;
-                    float dx = cord[0] + 16 * c[0] - Camera.Position.X;
-                    float dy = cord[1] + 16 * c[1] - Camera.Position.Y;
-                    float dz = cord[2] + 16 * c[2] - Camera.Position.Z;
+                    float dx = cord.X + 16 * c[0] - Camera.Position.X;
+                    float dy = cord.Y + 16 * c[1] - Camera.Position.Y;
+                    float dz = cord.Z + 16 * c[2] - Camera.Position.Z;
 
                     float horizontal = (float)Math.Atan2(dx, dz);
-                    float distXZ = (float)Math.Sqrt(dx * dx + dz * dz);
-                    float vertical = (float)Math.Atan2(dy, distXZ);
+                    float vertical = (float)Math.Atan2(dy, Math.Sqrt(dx * dx + dz * dz));
 
-                    Vector3 n = Player.GetNormalFromYawPitch(horizontal, vertical);
-                    if (log) Console.WriteLine($"{n.X}, {n.Y}, {n.Z}, :");
-                    foreach (int[] face in CubeNormals)
+                    Vector3 normal = Player.GetNormalFromYawPitch(horizontal, vertical);
+                    if (log) Console.WriteLine($"{normal.X}, {normal.Y}, {normal.Z}, :");
+                    foreach (Vector3 face in CubeNormals)
                     {
-                        int nx = cord + face;
-                        int ny = cord[1] + face[1];
-                        int nz = cord[2] + face[2];
+
+                        Vector3 newCord = cord + face;
+                        if (IsVoxelSolid(ChunkData, (int)newCord.X, (int)newCord.Y, (int)newCord.Z))
+                        {
+                            if (Vector3.Dot(Player.Normal, normal) > 0)
+                            {
+                                Faces3dSpace.Add(new Face());
+                            }
+                        }
 
                     }
 
@@ -110,16 +114,21 @@ namespace Program
 
             }
 
-            return (Faces3dSpace.ToArray(), FaceColors.ToArray());
+            return Faces3dSpace.ToArray();
         }
-        public static int[] AddIntList(int[] l1, int[] l2)
+        private static bool IsVoxelSolid(Chunk chunk, int x, int y, int z)
         {
-            int[] rL = new int[l1.Length];
-            foreach (int i = 0; i < l1.L)
-            {
-                rL
-            }
-            return rL;   
+            if (x < 0 || x >= 16 || y < 0 || y >= 16 || z < 0 || z >= 16) return false; // treat outside chunk as air
+            return chunk.data[x][y][z] != 0;
+        }
+    }
+    public class Face
+    {
+        Vector3[] V = new Vector3[3];
+        float D;
+        public Face(Vector3[] v,float d)
+        {
+            V = v;D = d;
         }
     }
 }
