@@ -22,7 +22,7 @@ namespace Program
         {
             int[][] WorldToRender = World.GetChunksToRender();
             int[][] ToRender = Camera.GetChunksInVeiw(WorldToRender);
-            Face[] Faces3dSpace = GetFacesIn3dSpace(ToRender, rep);
+            Face[] Faces3dSpace = GetFacesIn3dSpace(ToRender, false);// rep);
 
             //Get a list of not empty chunks that i am in veiw of
             if (rep)
@@ -69,7 +69,7 @@ namespace Program
             texture.SetData(new[] { color });
             return texture;
         }
-        public static Face[]  GetFacesIn3dSpace(int[][] ToRender, bool log)
+        public static Face[] GetFacesIn3dSpace(int[][] ToRender, bool log)
         {
             List<Face> Faces3dSpace = new List<Face>();
 
@@ -82,16 +82,17 @@ namespace Program
                 }
                 for (int i = 0; i < 16 * 16 * 16; i++)
                 {
-                    Vector3 cord = new Vector3(i % 16 + 0.5f, (i / 16) % 16 + 0.5f, i / (16 * 16) + 0.5f);
+                    Vector3 cord = new Vector3(i % 16, (i / 16) % 16, i / (16 * 16));
                     int[] f = new int[3];
                     int val = ChunkData.data[(int)cord.X][(int)cord.Y][(int)cord.Z];
                     if (val == 0) continue;
-                    float dx = cord.X + 16 * c[0] - Camera.Position.X;
-                    float dy = cord.Y + 16 * c[1] - Camera.Position.Y;
-                    float dz = cord.Z + 16 * c[2] - Camera.Position.Z;
+                    Vector3 d = cord - Camera.Position;
+                    d.X += 16 * c[0] + 0.5f;
+                    d.Y += 16 * c[1] + 0.5f;
+                    d.Z += 16 * c[2] + 0.5f;
 
-                    float horizontal = (float)Math.Atan2(dx, dz);
-                    float vertical = (float)Math.Atan2(dy, Math.Sqrt(dx * dx + dz * dz));
+                    float horizontal = (float)Math.Atan2(d.X, d.Z);
+                    float vertical = (float)Math.Atan2(d.Y, Math.Sqrt(d.X * d.X + d.Z * d.Z));
 
                     Vector3 normal = Player.GetNormalFromYawPitch(horizontal, vertical);
                     if (log) Console.WriteLine($"{normal.X}, {normal.Y}, {normal.Z}, :");
@@ -103,18 +104,26 @@ namespace Program
                         {
                             if (Vector3.Dot(Player.Normal, normal) > 0)
                             {
-                                Faces3dSpace.Add(new Face());
+                                Vector3 vn = d + (face / 2f);
+                                float distance = (float)Math.Sqrt(vn.X * vn.X + vn.Y * vn.Y + vn.Z * vn.Z);
+                                Vector3[][] BothFaces = GetVerticiesWithNormal(face);
+                                Faces3dSpace.Add(new Face(BothFaces[0], distance));
+                                Faces3dSpace.Add(new Face(BothFaces[1], distance));
                             }
                         }
 
                     }
 
                 }
-
-
             }
 
             return Faces3dSpace.ToArray();
+        }
+        private static Vector3[][] GetVerticiesWithNormal(Vector3 face)
+        {
+            
+            
+            return [];
         }
         private static bool IsVoxelSolid(Chunk chunk, int x, int y, int z)
         {
@@ -126,9 +135,9 @@ namespace Program
     {
         Vector3[] V = new Vector3[3];
         float D;
-        public Face(Vector3[] v,float d)
+        public Face(Vector3[] v, float d)
         {
-            V = v;D = d;
+            V = v; D = d;
         }
     }
 }
