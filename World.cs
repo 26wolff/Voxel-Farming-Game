@@ -72,26 +72,42 @@ namespace Program
         }
         public static int[][] GetChunksToRender()
         {
-            int[] playerChunk = [(int)Math.Floor(Player.Position.X / 16), (int)Math.Floor(Player.Position.Y / 16), (int)Math.Floor(Player.Position.Z / 16)];
-            int renderDist = Player.renderDistance;
+            int px = (int)Math.Floor(Camera.Position.X / 16f);
+            int py = (int)Math.Floor(Camera.Position.Y / 16f);
+            int pz = (int)Math.Floor(Camera.Position.Z / 16f);
+
+            int renderDist = Camera.renderDistance;
             int render2x = renderDist * renderDist;
+
             List<int[]> result = new List<int[]>();
+
             for (int x = -renderDist; x <= renderDist; x++)
             {
-                if (x < 0 || x > WorldData.XLen) continue;
-                for (int z = -renderDist; z <= renderDist; z++)
+                int cx = px + x;
+                if (cx < 0 || cx >= WorldData.XLen) continue;
+
+                for (int y = -renderDist; y <= renderDist; y++)
                 {
-                    if (z < 0 || z > WorldData.ZLen) continue;
-                    if (x * x + z * z <= render2x + 1) result.Add([x + playerChunk[0], playerChunk[1], z + playerChunk[2]]);
+                    int cy = py + y;
+                    if (cy < 0 || cy >= WorldData.YLen) continue;
+
+                    for (int z = -renderDist; z <= renderDist; z++)
+                    {
+                        int cz = pz + z;
+                        if (cz < 0 || cz >= WorldData.ZLen) continue;
+
+                        // Check 3D distance for a sphere
+                        if (x * x + y * y + z * z <= render2x)
+                        {
+                            result.Add(new int[] { cx, cy, cz });
+                        }
+                    }
                 }
             }
-            int[][] intListResult = new int[result.Count][];
-            for (int i = 0; i < result.Count; i++)
-            {
-                intListResult[i] = result[i];
-            }
-            return intListResult;
+
+            return result.ToArray();
         }
+
         public static int[] GetBlocksToRender(int[] chunkCord)
         {
 
@@ -125,7 +141,7 @@ namespace Program
             Chunk New = new Chunk([cx, cy, cz], Data, empty);
 
             int[] key = [cx, cy, cz];
-            LoadedChunks[cx * WorldData.XLen + cz] =  true;
+            LoadedChunks[cx * WorldData.XLen + cz] = true;
 
             if (Indexies.TryGetValue(key, out int spare))
             {
@@ -274,7 +290,7 @@ namespace Program
         public int YLen { get; set; }
         public int ZLen { get; set; }
     }
-   
+
 
     // 👇 Added comparer for int[] dictionary keys
     public class IntArrayComparer : IEqualityComparer<int[]>

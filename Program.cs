@@ -76,12 +76,13 @@ namespace Program
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             times++;
             FPS += dt;
-            if(times >= TargetFramesPerSecond*5)
+            if (times >= TargetFramesPerSecond * 5)
             {
                 Console.WriteLine($"FPS: {1 / (FPS / times)}");
                 times = 0;
                 FPS = 0f;
             }
+            InputManager.Update(this);
             UpdateManager.Update(dt);
             base.Update(gameTime);
         }

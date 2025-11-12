@@ -11,9 +11,8 @@ namespace Program
         
         public static void Update(float dt)
         {
-            InputManager.Update();
             Player.Update(dt);
-            Camera.Update();
+            Camera.Update(dt);
             
         }
     }

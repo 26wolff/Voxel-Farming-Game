@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-
+using System.Collections.Generic;
 
 namespace Program
 {
@@ -9,135 +9,188 @@ namespace Program
     {
         private static SpriteBatch? _spriteBatch;
         private static GraphicsDevice? _graphicsDevice;
+        private static Texture2D? _lineTex;
         private static bool rep = true;
-        public static Vector3[] CubeNormals = [new Vector3(-1, 0, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 1, 0), new Vector3(0, 0, -1), new Vector3(0, 0, 1)];
+
+        public static readonly Vector3[] CubeNormals =
+        {
+            new Vector3(-1, 0, 0), // -X
+            new Vector3( 1, 0, 0), // +X
+            new Vector3( 0,-1, 0), // -Y
+            new Vector3( 0, 1, 0), // +Y
+            new Vector3( 0, 0,-1), // -Z
+            new Vector3( 0, 0, 1)  // +Z
+        };
+
+        private static readonly Vector3[][] FaceTriangles =
+        {
+            // -X
+            new [] { new Vector3(-.5f,-.5f, .5f), new Vector3(-.5f, .5f, .5f), new Vector3(-.5f, .5f,-.5f) },
+            new [] { new Vector3(-.5f,-.5f, .5f), new Vector3(-.5f, .5f,-.5f), new Vector3(-.5f,-.5f,-.5f) },
+
+            // +X
+            new [] { new Vector3(.5f,-.5f, .5f), new Vector3(.5f, .5f, .5f), new Vector3(.5f, .5f,-.5f) },
+            new [] { new Vector3(.5f,-.5f, .5f), new Vector3(.5f, .5f,-.5f), new Vector3(.5f,-.5f,-.5f) },
+
+            // -Y
+            new [] { new Vector3(-.5f,-.5f,-.5f), new Vector3(-.5f,-.5f, .5f), new Vector3(.5f,-.5f, .5f) },
+            new [] { new Vector3(-.5f,-.5f,-.5f), new Vector3(.5f,-.5f, .5f), new Vector3(.5f,-.5f,-.5f) },
+
+            // +Y
+            new [] { new Vector3(-.5f, .5f,-.5f), new Vector3(-.5f, .5f, .5f), new Vector3(.5f, .5f, .5f) },
+            new [] { new Vector3(-.5f, .5f,-.5f), new Vector3(.5f, .5f, .5f), new Vector3(.5f, .5f,-.5f) },
+
+            // -Z
+            new [] { new Vector3(-.5f,-.5f,-.5f), new Vector3(-.5f, .5f,-.5f), new Vector3(.5f, .5f,-.5f) },
+            new [] { new Vector3(-.5f,-.5f,-.5f), new Vector3(.5f, .5f,-.5f), new Vector3(.5f,-.5f,-.5f) },
+
+            // +Z
+            new [] { new Vector3(-.5f,-.5f, .5f), new Vector3(-.5f, .5f, .5f), new Vector3(.5f, .5f, .5f) },
+            new [] { new Vector3(-.5f,-.5f, .5f), new Vector3(.5f, .5f, .5f), new Vector3(.5f,-.5f, .5f) },
+        };
 
         public static void Init(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch)
         {
             _graphicsDevice = graphicsDevice;
             _spriteBatch = spriteBatch;
+            _lineTex = new Texture2D(graphicsDevice, 1, 1);
+            _lineTex.SetData(new[] { Color.White });
         }
 
         public static void Draw()
         {
-            int[][] WorldToRender = World.GetChunksToRender();
-            int[][] ToRender = Camera.GetChunksInVeiw(WorldToRender);
-            Face[] Faces3dSpace = GetFacesIn3dSpace(ToRender, false);// rep);
+            if (_spriteBatch == null) return;
 
-            //Get a list of not empty chunks that i am in veiw of
+            int[][] chunks = World.GetChunksToRender();
+            int[][] inView = Camera.GetChunksInView(chunks);
+            Face[] faces = GetFacesIn3dSpace(inView, rep);
+
             if (rep)
             {
-
-
-
-                Console.WriteLine("DREW");
-                foreach (var c in WorldToRender)
-                {
-                    Console.WriteLine($"{c[0]},{c[2]}");
-                }
-                Console.WriteLine("DREW2");
-                foreach (var c in ToRender)
-                {
-                    Console.WriteLine($"{c[0]},{c[2]}");
-                }
-                Console.WriteLine();
-
-
-
-
-
+                Console.WriteLine($"Generated {faces.Length} visible faces.");
                 rep = false;
             }
 
-            // Example: draw a red square
-            _spriteBatch!.Begin();
-            var tex = CreateTexture(Color.Red);
-            _spriteBatch.Draw(tex, new Rectangle((int)(Player.Position.X * Screen.Height), (int)(-Player.Position.Z * Screen.Height), 64, 64), Color.White);
+            _spriteBatch.Begin();
+
+            // Draw each triangle projected to screen
+            foreach (var face in faces)
+            {
+                Vector2 p0 = WorldToScreen(face.V[0]);
+                Vector2 p1 = WorldToScreen(face.V[1]);
+                Vector2 p2 = WorldToScreen(face.V[2]);
+
+                DrawLine(p0, p1, Color.Red);
+                DrawLine(p1, p2, Color.Red);
+                DrawLine(p2, p0, Color.Red);
+            }
+
             _spriteBatch.End();
         }
 
-        public static Texture2D CreateTexture(Color color)
+        private static void DrawLine(Vector2 start, Vector2 end, Color color)
         {
-            // if graphics device is still null, try to grab it from the spritebatch
-            if (_graphicsDevice == null && _spriteBatch != null)
-                _graphicsDevice = _spriteBatch.GraphicsDevice;
+            if (_lineTex == null) return;
 
-            if (_graphicsDevice == null)
-                throw new Exception("DrawManager.Init() must be called before creating textures.");
-
-            Texture2D texture = new Texture2D(_graphicsDevice, 1, 1);
-            texture.SetData(new[] { color });
-            return texture;
+            float angle = (float)Math.Atan2(end.Y - start.Y, end.X - start.X);
+            float length = Vector2.Distance(start, end);
+            _spriteBatch!.Draw(_lineTex, start, null, color, angle, Vector2.Zero, new Vector2(length, 1f), SpriteEffects.None, 0);
         }
-        public static Face[] GetFacesIn3dSpace(int[][] ToRender, bool log)
+
+        private static Vector2 WorldToScreen(Vector3 worldPos)
         {
-            List<Face> Faces3dSpace = new List<Face>();
+            // Convert XNA Vector3 to Vector4 for transformation
+            Vector4 pos = new Vector4(worldPos, 1f);
 
-            foreach (int[] c in ToRender)
+            // Transform to view space
+            Vector4 viewSpace = Vector4.Transform(pos, Camera.View);
+
+            // Backface culling fix: skip triangles behind the camera
+            if (viewSpace.Z > 0) return new Vector2(-1000, -1000);
+
+            // Transform to clip space
+            Vector4 clipSpace = Vector4.Transform(viewSpace, Camera.Projection);
+
+            if (clipSpace.W == 0) clipSpace.W = 0.0001f;
+
+            Vector3 ndc = new Vector3(clipSpace.X, clipSpace.Y, clipSpace.Z) / clipSpace.W;
+
+            float sx = (ndc.X + 1f) / 2f * Screen.Width;
+            float sy = (1f - ndc.Y) / 2f * Screen.Height;
+
+            return new Vector2(sx, sy);
+        }
+
+
+        public static Face[] GetFacesIn3dSpace(int[][] chunks, bool log)
+        {
+            List<Face> faces = new List<Face>();
+
+            foreach (var c in chunks)
             {
-                Chunk? ChunkData = World.GetChunkData(c[0], c[1], c[2]);
-                if (ChunkData == null || ChunkData.empty)
-                {
-                    continue;
-                }
-                for (int i = 0; i < 16 * 16 * 16; i++)
-                {
-                    Vector3 cord = new Vector3(i % 16, (i / 16) % 16, i / (16 * 16));
-                    int[] f = new int[3];
-                    int val = ChunkData.data[(int)cord.X][(int)cord.Y][(int)cord.Z];
-                    if (val == 0) continue;
-                    Vector3 d = cord - Camera.Position;
-                    d.X += 16 * c[0] + 0.5f;
-                    d.Y += 16 * c[1] + 0.5f;
-                    d.Z += 16 * c[2] + 0.5f;
+                Chunk? chunk = World.GetChunkData(c[0], c[1], c[2]);
+                if (chunk == null || chunk.empty) continue;
 
-                    float horizontal = (float)Math.Atan2(d.X, d.Z);
-                    float vertical = (float)Math.Atan2(d.Y, Math.Sqrt(d.X * d.X + d.Z * d.Z));
+                int baseX = c[0] * 16;
+                int baseY = c[1] * 16;
+                int baseZ = c[2] * 16;
 
-                    Vector3 normal = Player.GetNormalFromYawPitch(horizontal, vertical);
-                    if (log) Console.WriteLine($"{normal.X}, {normal.Y}, {normal.Z}, :");
-                    foreach (Vector3 face in CubeNormals)
-                    {
-
-                        Vector3 newCord = cord + face;
-                        if (IsVoxelSolid(ChunkData, (int)newCord.X, (int)newCord.Y, (int)newCord.Z))
+                for (int x = 0; x < 16; x++)
+                    for (int y = 0; y < 16; y++)
+                        for (int z = 0; z < 16; z++)
                         {
-                            if (Vector3.Dot(Player.Normal, normal) > 0)
+                            if (chunk.data[x][y][z] == 0) continue;
+
+                            Vector3 center = new Vector3(baseX + x + .5f, baseY + y + .5f, baseZ + z + .5f);
+
+                            for (int i = 0; i < 6; i++)
                             {
-                                Vector3 vn = d + (face / 2f);
-                                float distance = (float)Math.Sqrt(vn.X * vn.X + vn.Y * vn.Y + vn.Z * vn.Z);
-                                Vector3[][] BothFaces = GetVerticiesWithNormal(face);
-                                Faces3dSpace.Add(new Face(BothFaces[0], distance));
-                                Faces3dSpace.Add(new Face(BothFaces[1], distance));
+                                Vector3 n = CubeNormals[i];
+                                int nx = x + (int)n.X;
+                                int ny = y + (int)n.Y;
+                                int nz = z + (int)n.Z;
+
+                                if (nx >= 0 && nx < 16 && ny >= 0 && ny < 16 && nz >= 0 && nz < 16 &&
+                                    chunk.data[nx][ny][nz] != 0) continue;
+
+                                if (Vector3.Dot(n, Camera.Position - center) <= 0) continue;
+
+                                float dist = Vector3.Distance(center, Camera.Position);
+                                int triIndex = i * 2;
+
+                                faces.Add(new Face(new[]
+                                {
+                            FaceTriangles[triIndex][0] + center,
+                            FaceTriangles[triIndex][1] + center,
+                            FaceTriangles[triIndex][2] + center
+                        }, dist));
+
+                                faces.Add(new Face(new[]
+                                {
+                            FaceTriangles[triIndex + 1][0] + center,
+                            FaceTriangles[triIndex + 1][1] + center,
+                            FaceTriangles[triIndex + 1][2] + center
+                        }, dist));
                             }
                         }
-
-                    }
-
-                }
             }
 
-            return Faces3dSpace.ToArray();
-        }
-        private static Vector3[][] GetVerticiesWithNormal(Vector3 face)
-        {
-            
-            
-            return [];
-        }
-        private static bool IsVoxelSolid(Chunk chunk, int x, int y, int z)
-        {
-            if (x < 0 || x >= 16 || y < 0 || y >= 16 || z < 0 || z >= 16) return false; // treat outside chunk as air
-            return chunk.data[x][y][z] != 0;
+            if (log) Console.WriteLine($"Faces: {faces.Count}");
+            return faces.ToArray();
         }
     }
+
     public class Face
     {
-        Vector3[] V = new Vector3[3];
-        float D;
+        public Vector3[] V;
+        public float D;
+
         public Face(Vector3[] v, float d)
         {
-            V = v; D = d;
+            V = v;
+            D = d;
         }
+
+        public string log() => $"{V[0]} | {V[1]} | {V[2]}";
     }
 }
