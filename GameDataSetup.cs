@@ -15,9 +15,6 @@ namespace Program
             "Data"
         );
 
-        /// <summary>
-        /// Call this on startup to sync the base data structure to AppData
-        /// </summary>
         public static void Reset(bool kill = false)
         {
             string targetDirectory = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -50,9 +47,7 @@ namespace Program
             CopyDirectoryRecursive(sourceRoot, destRoot);
         }
 
-        /// <summary>
-        /// Recursively copy files and folders if they don't exist
-        /// </summary>
+
         private static void CopyDirectoryRecursive(string sourceDir, string targetDir)
         {
             // Create target folder if it doesn't exist

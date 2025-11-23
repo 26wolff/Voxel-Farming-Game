@@ -60,8 +60,10 @@ namespace Program
         public static void Draw(bool log = false)
         {
             if (_spriteBatch == null) return;
+            
+            _graphicsDevice?.Clear(Color.CornflowerBlue);
 
-            int[][] chunks = Camera.Get_Chunks_To_Render(log);
+            int[][] chunks = Camera.Get_Chunks_To_Render(rep);
             Face[] faces = GetFacesIn3dSpace(chunks, rep);
 
             if (rep)

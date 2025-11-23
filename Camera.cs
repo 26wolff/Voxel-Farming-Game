@@ -57,9 +57,7 @@ namespace Program
             Position = Player.Position;
         }
 
-        // ================================================================
-        // UPDATED FOR NEW MIN/MAX WORLD SYSTEM
-        // ================================================================
+
         public static int[][] Get_Chunks_To_Render(bool log = false)
         {
             Vector3 Pos_Chunk = Position / 16f;
@@ -75,31 +73,35 @@ namespace Program
             float rendeInt_Render_Dist_Sq = renderDistance * renderDistance;
 
             List<int[]> result = new List<int[]>();
-            WorldStorage w = World.WorldData;
+            WorldStorage worldData = World.WorldData;
 
             // Loop around camera
             for (int ox = -Int_Render_Dist; ox <= Int_Render_Dist; ox++)
             {
+                int cx = ox + Curr_Chunk.X;
+                if(!Spare.Bound(cx,worldData.XMin,worldData.XMax)) {
+                    if(log){
+                        Console.WriteLine($"{cx} failed with {worldData.XMin} and {worldData.XMax}");
+                    }
+                    continue;
+                    
+                }
                 for (int oy = -Int_Render_Dist; oy <= Int_Render_Dist; oy++)
                 {
+                    int cy = oy + Curr_Chunk.Y;
+                    if(!Spare.Bound(cy,worldData.YMin,worldData.YMax)) continue;
                     for (int oz = -Int_Render_Dist; oz <= Int_Render_Dist; oz++)
                     {
+                        int cz = oz + Curr_Chunk.Z;
+                        if(!Spare.Bound(cz,worldData.ZMin,worldData.ZMax)) continue;
+
                         float ox2 = (ox+0.5f) * (ox+0.5f);
                         float oy2 = (oy+0.5f) * (oy+0.5f);
                         float oz2 = (oz+0.5f) * (oz+0.5f);
 
-                        // distance sphere
+                        // cull out of distance sphere
                         if (ox2 + oy2 + oz2 >= rendeInt_Render_Dist_Sq+2*sqrt2)
                             continue;
-
-                        int cx = Curr_Chunk.X + ox;// Chunk Cord
-                        int cy = Curr_Chunk.Y + oy;
-                        int cz = Curr_Chunk.Z + oz;
-
-                        // BOUND CHECK USING MIN/MAX (fixed) Depending on World Data
-                        if (cx < w.XMin || cx > w.XMax) continue;
-                        if (cy < w.YMin || cy > w.YMax) continue;
-                        if (cz < w.ZMin || cz > w.ZMax) continue;
 
                         // Add veiw culling
 

@@ -26,5 +26,12 @@ namespace Program
             return $"{{X:{X} Y:{Y} Z:{Z}}}";
         }
     }
+    public static class Spare
+    {
+        public static bool Bound(int v, int min = 0, int max = 0)
+        {
+            return !(v < min || v > max);
+        }
+    }
 
 }

@@ -92,7 +92,7 @@ namespace Program
                     for (int z = wData.ZMin; z <= wData.ZMax; z++)
                     {
                         list.Add(new int[] { x, y, z });
-                        Console.WriteLine($"Chunk: {x}, {y}, {z}");
+                        //Console.WriteLine($"Chunk: {x}, {y}, {z}");
                     }
                 }
             }
@@ -118,7 +118,7 @@ namespace Program
         public static bool Load_Chunk_Into_Array(int cx, int cy, int cz)
         {
             // This should only be called on world load
-            Console.WriteLine($"{cx}, {cz} loading");
+            //Console.WriteLine($"{cx}, {cz} loading");
             string WorldOveride = Player.WorldID;
 
             // Validate world data lengths

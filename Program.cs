@@ -30,7 +30,7 @@ namespace Program
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Initialize your game systems
-             GameDataSync.Reset(true);
+            //GameDataSync.Reset(true);
             
             GameDataSync.Sync();
             World.Init();
@@ -72,7 +72,7 @@ namespace Program
             FPS += dt;
             if (times >= TargetFramesPerSecond * 5)
             {
-                Console.WriteLine($"FPS: {1 / (FPS / times)}");
+                //Console.WriteLine($"FPS: {1 / (FPS / times)}");
                 times = 0;
                 FPS = 0f;
             }
@@ -84,7 +84,6 @@ namespace Program
 
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
             DrawManager.Draw(false);
             base.Draw(gameTime);
         }
