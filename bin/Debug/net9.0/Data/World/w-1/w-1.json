@@ -1,5 +1,8 @@
 {
-    "XLen":4,
-    "YLen":1,
-    "ZLen":4
+    "XMin":-4,
+    "XMax":4,
+    "YMin":0,
+    "YMax":0,
+    "ZMin":-4,
+    "ZMax":4
 }

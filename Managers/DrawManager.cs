@@ -57,13 +57,12 @@ namespace Program
             _lineTex.SetData(new[] { Color.White });
         }
 
-        public static void Draw()
+        public static void Draw(bool log = false)
         {
             if (_spriteBatch == null) return;
 
-            int[][] chunks = World.GetChunksToRender();
-            int[][] inView = Camera.GetChunksInView(chunks);
-            Face[] faces = GetFacesIn3dSpace(inView, rep);
+            int[][] chunks = Camera.Get_Chunks_To_Render(log);
+            Face[] faces = GetFacesIn3dSpace(chunks, rep);
 
             if (rep)
             {
@@ -80,9 +79,9 @@ namespace Program
                 Vector2 p1 = WorldToScreen(face.V[1]);
                 Vector2 p2 = WorldToScreen(face.V[2]);
 
-                DrawLine(p0, p1, Color.Red);
-                DrawLine(p1, p2, Color.Red);
-                DrawLine(p2, p0, Color.Red);
+                DrawLine(p0, p1, face.C);
+                DrawLine(p1, p2, face.C);
+                DrawLine(p2, p0, face.C);
             }
 
             _spriteBatch.End();
@@ -139,7 +138,8 @@ namespace Program
                     for (int y = 0; y < 16; y++)
                         for (int z = 0; z < 16; z++)
                         {
-                            if (chunk.data[x][y][z] == 0) continue;
+                            int val = chunk.data[x * 256 + y * 16 + z];
+                            if (val == 0) continue;
 
                             Vector3 center = new Vector3(baseX + x + .5f, baseY + y + .5f, baseZ + z + .5f);
 
@@ -151,26 +151,42 @@ namespace Program
                                 int nz = z + (int)n.Z;
 
                                 if (nx >= 0 && nx < 16 && ny >= 0 && ny < 16 && nz >= 0 && nz < 16 &&
-                                    chunk.data[nx][ny][nz] != 0) continue;
+                                    chunk.data[nx * 256 + ny * 16 + nz] != 0) continue;
 
                                 if (Vector3.Dot(n, Camera.Position - center) <= 0) continue;
 
                                 float dist = Vector3.Distance(center, Camera.Position);
                                 int triIndex = i * 2;
+                                Color color;
+                                switch (val)
+                                {
+                                    case 16:
+                                        color = Color.Gray;
+                                        break;
+                                    case 17:
+                                        color = Color.Brown;
+                                        break;
+                                    case 18:
+                                        color = Color.DarkGreen;
+                                        break;
+                                    default:
+                                        color = Color.Magenta;
+                                        break;
+                                }
 
                                 faces.Add(new Face(new[]
                                 {
                             FaceTriangles[triIndex][0] + center,
                             FaceTriangles[triIndex][1] + center,
                             FaceTriangles[triIndex][2] + center
-                        }, dist));
+                        }, dist, color));
 
                                 faces.Add(new Face(new[]
                                 {
                             FaceTriangles[triIndex + 1][0] + center,
                             FaceTriangles[triIndex + 1][1] + center,
                             FaceTriangles[triIndex + 1][2] + center
-                        }, dist));
+                        }, dist, color));
                             }
                         }
             }
@@ -184,11 +200,13 @@ namespace Program
     {
         public Vector3[] V;
         public float D;
+        public Color C;
 
-        public Face(Vector3[] v, float d)
+        public Face(Vector3[] v, float d, Color c)
         {
             V = v;
             D = d;
+            C = c;
         }
 
         public string log() => $"{V[0]} | {V[1]} | {V[2]}";

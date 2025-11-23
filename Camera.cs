@@ -9,12 +9,12 @@ namespace Program
         // Camera Position is synced with Player
         public static Vector3 Position = Player.Position;
 
-        // ViewAngle.X = horizontal yaw (left/right)
-        // ViewAngle.Y = vertical pitch (up/down)
+        // ViewAngle.X = yaw, ViewAngle.Y = pitch
         public static Vector2 ViewAngle = Vector2.Zero;
 
-        // FOV in degrees
-        public static float Fov = 90f;
+        // FOV in radians
+        public static float Fov = 1.75f;
+        public static float sqrt2 = (float) Math.Sqrt(2f);
 
         public static Vector3 Forward
         {
@@ -23,6 +23,7 @@ namespace Program
                 float yaw = ViewAngle.X;
                 float pitch = ViewAngle.Y;
                 double cosP = Math.Cos(pitch);
+
                 return Vector3.Normalize(new Vector3(
                     (float)(Math.Sin(yaw) * cosP),
                     (float)(Math.Sin(pitch)),
@@ -33,7 +34,8 @@ namespace Program
 
         public static Vector3 Right => Vector3.Normalize(Vector3.Cross(Forward, Vector3.Up));
         public static Vector3 Up => Vector3.Normalize(Vector3.Cross(Right, Forward));
-        public static int renderDistance = 3;
+
+        public static float renderDistance = 3.5f;
 
         public static Matrix View =>
             Matrix.CreateLookAt(
@@ -44,7 +46,7 @@ namespace Program
 
         public static Matrix Projection =>
             Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.ToRadians(Fov),
+                Fov,
                 Screen.Aspect,
                 0.1f,
                 2000f
@@ -53,61 +55,69 @@ namespace Program
         public static void Update(float dt)
         {
             Position = Player.Position;
-            // Sync camera to player every frame
-            // If mouse look code exists, modify ViewAngle here
         }
 
-        public static int[][] GetChunksInView(int[][] chunks)
+        // ================================================================
+        // UPDATED FOR NEW MIN/MAX WORLD SYSTEM
+        // ================================================================
+        public static int[][] Get_Chunks_To_Render(bool log = false)
         {
-            List<int[]> visible = new List<int[]>();
+            Vector3 Pos_Chunk = Position / 16f;
 
-            Vector3 camPos = Position;
-            float yaw = ViewAngle.X;
-            float pitch = ViewAngle.Y;
-            float halfHFov = MathHelper.ToRadians(Fov * 0.5f);
-            float halfVFov = MathHelper.ToRadians(Fov * 0.5f); // or use a different vertical FOV if desired
+            // FIXED: Z was used twice. Correct order is X,Y,Z
+            Vector3Int Curr_Chunk = new Vector3Int(
+                (int)Math.Floor(Pos_Chunk.X),
+                (int)Math.Floor(Pos_Chunk.Y),
+                (int)Math.Floor(Pos_Chunk.Z)
+            );
 
-            foreach (var c in chunks)
+            int Int_Render_Dist = (int)Math.Ceiling(renderDistance);
+            float rendeInt_Render_Dist_Sq = renderDistance * renderDistance;
+
+            List<int[]> result = new List<int[]>();
+            WorldStorage w = World.WorldData;
+
+            // Loop around camera
+            for (int ox = -Int_Render_Dist; ox <= Int_Render_Dist; ox++)
             {
-                Vector3 basePos = new Vector3(c[0] * 16f, c[1] * 16f, c[2] * 16f);
-                bool inView = false;
-
-                for (int xi = 0; xi <= 1 && !inView; xi++)
+                for (int oy = -Int_Render_Dist; oy <= Int_Render_Dist; oy++)
                 {
-                    for (int yi = 0; yi <= 1 && !inView; yi++)
+                    for (int oz = -Int_Render_Dist; oz <= Int_Render_Dist; oz++)
                     {
-                        for (int zi = 0; zi <= 1 && !inView; zi++)
-                        {
-                            Vector3 corner = basePos + new Vector3(xi * 16f, yi * 16f, zi * 16f);
-                            Vector3 rel = corner - camPos;
+                        float ox2 = (ox+0.5f) * (ox+0.5f);
+                        float oy2 = (oy+0.5f) * (oy+0.5f);
+                        float oz2 = (oz+0.5f) * (oz+0.5f);
 
-                            // Get yaw and pitch to this vertex from camera
-                            float dirYaw = (float)Math.Atan2(rel.X, rel.Z);
-                            float dirPitch = (float)Math.Atan2(rel.Y, Math.Sqrt(rel.X * rel.X + rel.Z * rel.Z));
+                        // distance sphere
+                        if (ox2 + oy2 + oz2 >= rendeInt_Render_Dist_Sq+2*sqrt2)
+                            continue;
 
-                            // Angle differences
-                            float dYaw = MathHelper.WrapAngle(dirYaw - yaw);
-                            float dPitch = MathHelper.WrapAngle(dirPitch - pitch);
+                        int cx = Curr_Chunk.X + ox;// Chunk Cord
+                        int cy = Curr_Chunk.Y + oy;
+                        int cz = Curr_Chunk.Z + oz;
 
-                            // If within FOV horizontally and vertically -> visible
-                            if (Math.Abs(dYaw) <= halfHFov && Math.Abs(dPitch) <= halfVFov)
-                            {
-                                inView = true;
-                                break;
-                            }
-                        }
+                        // BOUND CHECK USING MIN/MAX (fixed) Depending on World Data
+                        if (cx < w.XMin || cx > w.XMax) continue;
+                        if (cy < w.YMin || cy > w.YMax) continue;
+                        if (cz < w.ZMin || cz > w.ZMax) continue;
+
+                        // Add veiw culling
+
+                        result.Add(new int[] { cx, cy, cz });
                     }
                 }
-
-                if (inView)
-                    visible.Add(c);
             }
 
-            return visible.ToArray();
+            if (log)
+            {
+                Console.WriteLine("-----------------------------------------------");
+                foreach (var a in result)
+                    Console.WriteLine($"{a[0]}, {a[2]}");
+
+                Console.WriteLine("Total: " + result.Count);
+            }
+
+            return result.ToArray();
         }
-
-
-
-
     }
 }

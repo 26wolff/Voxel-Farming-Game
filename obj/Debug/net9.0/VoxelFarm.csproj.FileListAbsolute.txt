@@ -35,6 +35,8 @@ C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\VoxelFarm.deps.json
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\VoxelFarm.runtimeconfig.json
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\VoxelFarm.dll
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\VoxelFarm.pdb
+C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\ComputeSharp.dll
+C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\ComputeSharp.Core.dll
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\MonoGame.Framework.dll
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\NVorbis.dll
 C:\Users\tyler\T\Code\Voxel-Farming-Game\bin\Debug\net9.0\runtimes\android-arm\native\libopenal.so

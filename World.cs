@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
 using System.Numerics;
 using System.Text.Json;
 
@@ -10,12 +9,12 @@ namespace Program
 {
     public static class World
     {
+        // storage of loaded chunk objects
         public static List<Chunk> ChunkStorage = new List<Chunk>();
-        public static WorldStorage WorldData = new WorldStorage(0, 0, 0);
-        public static bool[] LoadedChunks = { };
-
-        // Use custom comparer for int[] keys
+        public static WorldStorage WorldData = new WorldStorage(0, 0, 0, 0, 0, 0);
         public static Dictionary<int[], int> Indexies = new Dictionary<int[], int>(new IntArrayComparer());
+        // safe empty chunk: id = {0,0,0}, data empty
+        public static Chunk EmptyChunk = new Chunk(new int[] { 0, 0, 0 }, Array.Empty<int>(), true);
 
         private static string heldPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -26,126 +25,111 @@ namespace Program
 
         public static void Init()
         {
-            LoadWorld("w-1");
-
+            WorldData = Get_WorldStorage(Player.WorldID);
+            Load_World(Player.WorldID);
         }
-        public static void LoadWorld(string world)
-        {
-            Player.Position = new Vector3(4f, 4f, 4f);
 
+        public static WorldStorage Get_WorldStorage(string world)
+        {
             string dataPath = Path.Combine(heldPath, world, $"{world}.json");
             if (!File.Exists(dataPath))
             {
-                Console.WriteLine($"Error: File not found at '{dataPath}'");
+                throw new FileNotFoundException($"Error: World not found at '{dataPath}'");
             }
+
             string jsonString = File.ReadAllText(dataPath);
-
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
             var TWorldData = JsonSerializer.Deserialize<WorldStorageGetSet>(jsonString, options);
             if (TWorldData != null)
             {
-                {
-                    WorldData = new WorldStorage(
-                        TWorldData.XLen,
-                        TWorldData.YLen,
-                        TWorldData.ZLen
-                    );
-                }
+                WorldData = new WorldStorage(
+                    TWorldData.XMin,
+                    TWorldData.XMax,
+                    TWorldData.YMin,
+                    TWorldData.YMax,
+                    TWorldData.ZMin,
+                    TWorldData.ZMax
+                );
             }
-            LoadedChunks = new bool[WorldData.XLen * WorldData.ZLen];
-            int[][] toLoad = GetWorldChunksID(WorldData);
-            foreach (int[] t in toLoad) LoadChunk(t[0], t[1], t[2]);
+
+            return WorldData;
         }
-        public static int[][] GetWorldChunksID(WorldStorage wData)
+
+        public static bool Load_World(string world)
         {
-            int[][] intListResult = new int[wData.XLen * wData.ZLen][];
-            for (int x = 0; x < wData.XLen; x++)
+            int[][] toLoad = Get_All_Chunk_ID_In_World(WorldData);
+            foreach (int[] t in toLoad)
             {
-                for (int z = 0; z < wData.ZLen; z++)
-                {
-                    intListResult[x * wData.XLen + z] = [x, 0, z];
-                    Console.WriteLine($"{x}, {z}");
-                }
+                // ensure t is length 3
+                if (t != null && t.Length == 3)
+                    Load_Chunk_Into_Array(t[0], t[1], t[2]);
             }
-            return intListResult;
+            return true;
         }
-        public static int[][] GetChunksToRender()
+
+        public static int[][] Get_All_Chunk_ID_In_World(WorldStorage wData)
         {
-            int px = (int)Math.Floor(Camera.Position.X / 16f);
-            int py = (int)Math.Floor(Camera.Position.Y / 16f);
-            int pz = (int)Math.Floor(Camera.Position.Z / 16f);
+            if (wData == null)
+                return Array.Empty<int[]>();
 
-            int renderDist = Camera.renderDistance;
-            int render2x = renderDist * renderDist;
+            // compute lengths directly from min/max (defensive)
+            int xLen = wData.XMax - wData.XMin + 1;
+            int yLen = wData.YMax - wData.YMin + 1;
+            int zLen = wData.ZMax - wData.ZMin + 1;
 
-            List<int[]> result = new List<int[]>();
-
-            for (int x = -renderDist; x <= renderDist; x++)
+            if (xLen <= 0 || yLen <= 0 || zLen <= 0)
             {
-                int cx = px + x;
-                if (cx < 0 || cx >= WorldData.XLen) continue;
+                Console.WriteLine($"Invalid world bounds: X[{wData.XMin}..{wData.XMax}] Y[{wData.YMin}..{wData.YMax}] Z[{wData.ZMin}..{wData.ZMax}]");
+                return Array.Empty<int[]>();
+            }
 
-                for (int y = -renderDist; y <= renderDist; y++)
+            var list = new List<int[]>(xLen * yLen * zLen);
+
+            for (int x = wData.XMin; x <= wData.XMax; x++)
+            {
+                for (int y = wData.YMin; y <= wData.YMax; y++)
                 {
-                    int cy = py + y;
-                    if (cy < 0 || cy >= WorldData.YLen) continue;
-
-                    for (int z = -renderDist; z <= renderDist; z++)
+                    for (int z = wData.ZMin; z <= wData.ZMax; z++)
                     {
-                        int cz = pz + z;
-                        if (cz < 0 || cz >= WorldData.ZLen) continue;
-
-                        // Check 3D distance for a sphere
-                        if (x * x + y * y + z * z <= render2x)
-                        {
-                            result.Add(new int[] { cx, cy, cz });
-                        }
+                        list.Add(new int[] { x, y, z });
+                        Console.WriteLine($"Chunk: {x}, {y}, {z}");
                     }
                 }
             }
 
-            return result.ToArray();
+            Console.WriteLine($"THIS PART count = {list.Count} (expected {xLen} * {yLen} * {zLen} = {xLen * yLen * zLen})");
+            return list.ToArray();
         }
 
-        public static int[] GetBlocksToRender(int[] chunkCord)
-        {
 
-            return [];
-        }
+        // ---------------------------------------------------------------
 
-        public static Chunk? GetChunkData(int cx, int cy, int cz)
+        public static Chunk GetChunkData(int cx, int cy, int cz)
         {
-            int[] key = [cx, cy, cz];
+            int[] key = new int[] { cx, cy, cz };
 
             if (Indexies.ContainsKey(key))
             {
-                //Console.WriteLine("PASS");
                 return ChunkStorage[Indexies[key]];
             }
-            else
-            {
-                //Console.WriteLine("CHUNK FAILED");
-                return null;
-            }
+            return EmptyChunk;
         }
 
-        public static bool LoadChunk(int cx, int cy, int cz, string? WorldOveride = null, bool ChunkOveride = false)
+        public static bool Load_Chunk_Into_Array(int cx, int cy, int cz)
         {
+            // This should only be called on world load
             Console.WriteLine($"{cx}, {cz} loading");
-            if (WorldOveride == null) WorldOveride = Player.World;
-            if (WorldData.XLen == 0 || WorldData.ZLen == 0) return false;
-            if (!ChunkOveride && LoadedChunks[cx * WorldData.XLen + cz]) return true;
-            bool empty;
-            int[][][] Data = FormatChunkData(WorldOveride, $"{cx}_{cy}_{cz}", out empty);
-            Chunk New = new Chunk([cx, cy, cz], Data, empty);
+            string WorldOveride = Player.WorldID;
 
-            int[] key = [cx, cy, cz];
-            LoadedChunks[cx * WorldData.XLen + cz] = true;
+            // Validate world data lengths
+            if (WorldData.XLen <= 0 || WorldData.YLen <= 0 || WorldData.ZLen <= 0) return false;
+
+            Chunk New = Get_Formated_Chunk_Data(WorldOveride, new int[] { cx, cy, cz });
+
+            int[] key = new int[] { cx, cy, cz };
 
             if (Indexies.TryGetValue(key, out int spare))
             {
-                // Exists, writing over it
                 ChunkStorage[spare] = New;
             }
             else
@@ -158,21 +142,18 @@ namespace Program
             return true;
         }
 
-        public static int[][][] FormatChunkData(string world, string chunk, out bool empty)
+        public static Chunk Get_Formated_Chunk_Data(string world, int[] chunk)
         {
-            empty = false;
-            string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk}.bin");
+            string dataPath = Path.Combine(heldPath, world, "Chunks", $"{chunk[0]}_{chunk[1]}_{chunk[2]}.bin");
             if (!File.Exists(dataPath))
             {
-                Console.WriteLine($"Error: File not found at '{chunk}'");
-                empty = true;
-                return GetEmptyChunkData();
+                return EmptyChunk;
             }
 
             byte[] bn = File.ReadAllBytes(dataPath);
             const int ROW_LEN = 16;
 
-            int[][][] formed = GetEmptyChunkData();
+            int[] Formed_Data = new int[4096];
 
             int pos = 0;
             while (pos < bn.Length)
@@ -214,83 +195,76 @@ namespace Program
 
                 for (int k = 0; k < ROW_LEN; k++)
                 {
-                    formed[15 - k][y][x] = expanded[k];
+                    // original formula kept: use x and y from header (0..15)
+                    Formed_Data[15 - k + 16 * y + 256 * x] = expanded[k];
                 }
             }
 
-            return formed;
-        }
-
-        public static void LogChunk(int[][][] data)
-        {
-            for (int yy = 0; yy < 16; yy++)
-            {
-                for (int xx = 0; xx < 16; xx++)
-                {
-                    for (int zz = 0; zz < 16; zz++)
-                    {
-                        Console.Write($"{data[xx][yy][zz],4}");
-                    }
-                    Console.WriteLine();
-                }
-                Console.WriteLine("------------------------------------------------");
-            }
-        }
-
-        public static int[][][] GetEmptyChunkData()
-        {
-            int size = 16;
-            int[][][] ou = new int[size][][];
-
-            for (int x = 0; x < size; x++)
-            {
-                ou[x] = new int[size][];
-                for (int y = 0; y < size; y++)
-                {
-                    ou[x][y] = new int[size];
-                }
-            }
-
-            return ou;
+            return new Chunk(chunk, Formed_Data, false);
         }
     }
 
     public class Chunk
     {
         public int[] id { get; set; }
-        public int[][][] data { get; set; } = { };
+        public int[] data { get; set; } = Array.Empty<int>();
         public bool empty { get; }
 
-        public Chunk(int[] Id, int[][][] Data, bool Empty)
+        public Chunk(int[] Id, int[] Data, bool Empty)
         {
             empty = Empty;
             id = Id;
-            if (!empty)
+            if (!empty && Data != null)
             {
                 data = Data;
+            }
+            else
+            {
+                data = Array.Empty<int>();
             }
         }
     }
 
     public class WorldStorage
     {
+        public int XMin;
+        public int XMax;
+        public int YMin;
+        public int YMax;
+        public int ZMin;
+        public int ZMax;
         public int XLen;
         public int YLen;
         public int ZLen;
-        public WorldStorage(int xlen, int ylen, int zlen)
+
+        public WorldStorage(int xmin, int xmax, int ymin, int ymax, int zmin, int zmax)
         {
-            XLen = xlen;
-            YLen = ylen;
-            ZLen = zlen;
+            Console.WriteLine($"int {xmin}, int {xmax}, int {ymin}, int {ymax}, int {zmin}, int {zmax}");
+            XMin = xmin;
+            XMax = xmax;
+            YMin = ymin;
+            YMax = ymax; // fixed (was xmax)
+            ZMin = zmin;
+            ZMax = zmax;
+            // lengths are inclusive: (max - min + 1)
+            XLen = XMax - XMin + 1;
+            YLen = YMax - YMin + 1;
+            ZLen = ZMax - ZMin + 1;
+            if (XLen < 0) XLen = 0;
+            if (YLen < 0) YLen = 0;
+            if (ZLen < 0) ZLen = 0;
         }
     }
+
     public class WorldStorageGetSet
     {
-        public int XLen { get; set; }
-        public int YLen { get; set; }
-        public int ZLen { get; set; }
+        public int XMin { get; set; }
+        public int XMax { get; set; }
+        public int YMin { get; set; }
+        public int YMax { get; set; }
+        public int ZMin { get; set; }
+        public int ZMax { get; set; }
     }
-
 
     // 👇 Added comparer for int[] dictionary keys
     public class IntArrayComparer : IEqualityComparer<int[]>
@@ -317,7 +291,4 @@ namespace Program
             }
         }
     }
-
-    // Dummy Player class for testing — remove if already defined elsewhere
-
 }

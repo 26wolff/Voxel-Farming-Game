@@ -10,7 +10,7 @@ namespace Program
     {
         public static Vector3 Position = new Vector3(0f, 20f, 0f);
         public static Vector2 ViewAngle = Vector2.Zero;
-        public static string World = "w-1";
+        public static string WorldID = "w-1";
         public static float Speed = 5;
         public static Vector3 Normal;
 
@@ -50,6 +50,8 @@ namespace Program
             Console.WriteLine($"Loaded player position: {Position}");
             Position.Y = 4f;
             Normal = GetNormalFromYawPitch(ViewAngle.X, ViewAngle.Y);
+
+
 
         }
 

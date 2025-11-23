@@ -4,10 +4,12 @@
         <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="ComputeSharp" Version="3.2.0" />
         <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.4" />
     </ItemGroup>
     <ItemGroup>

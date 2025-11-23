@@ -2,46 +2,41 @@
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
 using System;
+using ComputeSharp;
 
 namespace Program
 {
-    public static class Screen
-    {
-        public static float Aspect { get; set; } = 16f / 9f;
-        public static float Width { get; set; } = 0;
-        public static float Height { get; set; } = 0;
-
-    }
 
     public class GameCore : Game
     {
         private GraphicsDeviceManager _graphics;
-
         private SpriteBatch? _spriteBatch;
         public int TargetFramesPerSecond = 180;
         public float FPS = 0;
         public int times = 0;
+
         public GameCore()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
-            _graphics.SynchronizeWithVerticalRetrace = false; 
+            _graphics.SynchronizeWithVerticalRetrace = false;
             IsFixedTimeStep = false;
             TargetElapsedTime = TimeSpan.FromMilliseconds(1000.0f / TargetFramesPerSecond);
-            
         }
+
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-            //GameDataSync.Reset(true);
-            GameDataSync.Sync();
 
+            // Initialize your game systems
+             GameDataSync.Reset(true);
+            
+            GameDataSync.Sync();
             World.Init();
             Player.Init();
-
             UpdateManager.Init();
-            DrawManager.Init(GraphicsDevice,_spriteBatch);
+            DrawManager.Init(GraphicsDevice, _spriteBatch);
             InputManager.Init();
 
             SetWindowedMode();
@@ -54,7 +49,7 @@ namespace Program
             Screen.Height = Window.ClientBounds.Height;
             Screen.Width = Window.ClientBounds.Width;
             Screen.Aspect = Screen.Width / Screen.Height;
-            Console.WriteLine($"Resolution updated: {Screen.Height} by {Screen.Width}, Aspect updated: {Screen.Aspect}");
+            Console.WriteLine($"Resolution updated: {Screen.Width}x{Screen.Height}, Aspect: {Screen.Aspect}");
         }
 
         private void SetWindowedMode(int Resolution = 500)
@@ -63,7 +58,6 @@ namespace Program
             Screen.Width = Resolution * Screen.Aspect;
             _graphics.PreferredBackBufferWidth = (int)Screen.Width;
             _graphics.PreferredBackBufferHeight = Resolution;
-
             _graphics.IsFullScreen = false;
             _graphics.ApplyChanges();
 
@@ -82,6 +76,7 @@ namespace Program
                 times = 0;
                 FPS = 0f;
             }
+
             InputManager.Update(this);
             UpdateManager.Update(dt);
             base.Update(gameTime);
@@ -90,7 +85,7 @@ namespace Program
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
-            DrawManager.Draw();
+            DrawManager.Draw(false);
             base.Draw(gameTime);
         }
 
