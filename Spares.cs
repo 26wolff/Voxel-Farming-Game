@@ -20,6 +20,22 @@ namespace Program
         {
             return new Vector3Int(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
         }
+        public static Vector3Int operator -(Vector3Int a, Vector3Int b)
+        {
+            return new Vector3Int(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+        }
+        public static Vector3Int operator +(Vector3Int a, int b)
+        {
+            return new Vector3Int(a.X + b, a.Y + b, a.Z + b);
+        }
+        public static Vector3Int operator -(Vector3Int a, int b)
+        {
+            return new Vector3Int(a.X - b, a.Y - b, a.Z - b);
+        }
+        public static Vector3Int operator -(int a, Vector3Int b)
+        {
+            return new Vector3Int(a - b.X, a - b.Y, a - b.Z);
+        }
 
         public override string ToString()
         {

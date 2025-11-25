@@ -57,6 +57,12 @@ namespace Program
             Position = Player.Position;
         }
 
+        public static int[][] Cull_Chunks_Not_In_View(int[][] chunks)
+        {
+                          
+            return [];
+        }
+
 
         public static int[][] Get_Chunks_To_Render(bool log = false)
         {
@@ -102,8 +108,6 @@ namespace Program
                         // cull out of distance sphere
                         if (ox2 + oy2 + oz2 >= rendeInt_Render_Dist_Sq+2*sqrt2)
                             continue;
-
-                        // Add veiw culling
 
                         result.Add(new int[] { cx, cy, cz });
                     }
