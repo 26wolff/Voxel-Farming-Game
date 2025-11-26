@@ -55,11 +55,18 @@ namespace Program
 
         }
 
-        public static void OnKeyPress(Keys key)
+        public static void On_Key_Press(Keys key)
         {
             if (key == Keys.A)
             {
                 Console.WriteLine($"{Position.X}, {Position.Z}");
+            }
+        }
+        public static void On_Key_Release(Keys key)
+        {
+            if (key == Keys.T)
+            {
+                
             }
         }
 

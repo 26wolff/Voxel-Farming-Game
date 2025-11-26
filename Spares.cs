@@ -44,6 +44,8 @@ namespace Program
     }
     public static class Spare
     {
+        public static float sqrt2 = (float) Math.Sqrt(2f);
+
         public static bool Bound(int v, int min = 0, int max = 0)
         {
             return !(v < min || v > max);

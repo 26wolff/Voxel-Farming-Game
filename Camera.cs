@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Input;
 
 namespace Program
 {
@@ -14,7 +15,6 @@ namespace Program
 
         // FOV in radians
         public static float Fov = 1.75f;
-        public static float sqrt2 = (float) Math.Sqrt(2f);
 
         public static Vector3 Forward
         {
@@ -35,7 +35,7 @@ namespace Program
         public static Vector3 Right => Vector3.Normalize(Vector3.Cross(Forward, Vector3.Up));
         public static Vector3 Up => Vector3.Normalize(Vector3.Cross(Right, Forward));
 
-        public static float renderDistance = 3.5f;
+        public static float renderDistance = 6f;//3.5f;
 
         public static Matrix View =>
             Matrix.CreateLookAt(
@@ -55,17 +55,49 @@ namespace Program
         public static void Update(float dt)
         {
             Position = Player.Position;
+
+            if (InputManager.Key[(int)Keys.T])
+            {
+                Fov -= dt/2;
+                if(Fov <= 0) Fov = 0.001f;
+                Console.WriteLine(Fov);
+            }
+            if (InputManager.Key[(int)Keys.G])
+            {
+                Fov += dt/2;
+                if(Fov > Math.PI) Fov = (float)Math.PI;
+            }
+        }
+        public static void On_Key_Press(Keys key)
+        {
+            if (key == Keys.T)
+            {
+                
+            }
+        }
+        public static void On_Key_Release(Keys key)
+        {
+            if (key == Keys.T)
+            {
+                
+            }
         }
 
-        public static int[][] Cull_Chunks_Not_In_View(int[][] chunks)
+        public static int[][] Cull_Chunks_Not_In_View(int[][] chunks, bool log = false)
         {
-                          
+            Vector3 Camera_Pos_Scaled = Camera.Position / 16;
+
+            if (log)
+            {
+               
+            }
             return [];
         }
 
 
         public static int[][] Get_Chunks_To_Render(bool log = false)
         {
+            Cull_Chunks_Not_In_View([],log);
             Vector3 Pos_Chunk = Position / 16f;
 
             // FIXED: Z was used twice. Correct order is X,Y,Z
@@ -106,7 +138,7 @@ namespace Program
                         float oz2 = (oz+0.5f) * (oz+0.5f);
 
                         // cull out of distance sphere
-                        if (ox2 + oy2 + oz2 >= rendeInt_Render_Dist_Sq+2*sqrt2)
+                        if (ox2 + oy2 + oz2 >= rendeInt_Render_Dist_Sq+2*Spare.sqrt2)
                             continue;
 
                         result.Add(new int[] { cx, cy, cz });

@@ -346,11 +346,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\tyler\\CODE\\VoxelFarm\\VoxelFarm.csproj",
+      "projectUniqueName": "C:\\Users\\tyler\\T\\Code\\Voxel-Farming-Game\\VoxelFarm.csproj",
       "projectName": "VoxelFarm",
-      "projectPath": "C:\\Users\\tyler\\CODE\\VoxelFarm\\VoxelFarm.csproj",
+      "projectPath": "C:\\Users\\tyler\\T\\Code\\Voxel-Farming-Game\\VoxelFarm.csproj",
       "packagesPath": "C:\\Users\\tyler\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\tyler\\CODE\\VoxelFarm\\obj\\",
+      "outputPath": "C:\\Users\\tyler\\T\\Code\\Voxel-Farming-Game\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\tyler\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -408,7 +408,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.303/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.304/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

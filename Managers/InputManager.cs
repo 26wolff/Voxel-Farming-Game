@@ -80,7 +80,11 @@ namespace Program
                 Key[(int)key] = _currentKeyboardState.IsKeyDown(key);
 
                 if (_previousKeyboardState.IsKeyUp(key) && _currentKeyboardState.IsKeyDown(key))
-                    Player.OnKeyPress(key);
+                    Player.On_Key_Press(key);
+                    Camera.On_Key_Press(key);
+                if (_previousKeyboardState.IsKeyDown(key) && _currentKeyboardState.IsKeyUp(key))
+                    Player.On_Key_Release(key);
+                    Camera.On_Key_Release(key);
             }
         }
 

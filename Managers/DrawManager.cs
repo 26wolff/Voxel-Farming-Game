@@ -65,13 +65,13 @@ namespace Program
 
             int[][] chunks = Camera.Get_Chunks_To_Render(rep);
             Face[] faces = GetFacesIn3dSpace(chunks, rep);
-
+            
             if (rep)
             {
                 Console.WriteLine($"Generated {faces.Length} visible faces.");
                 rep = false;
             }
-
+            
             _spriteBatch.Begin();
 
             // Draw each triangle projected to screen

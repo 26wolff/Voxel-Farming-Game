@@ -14,6 +14,7 @@ namespace Program
         public int TargetFramesPerSecond = 180;
         public float FPS = 0;
         public int times = 0;
+        public float totalTime = 0f;
 
         public GameCore()
         {
@@ -70,9 +71,11 @@ namespace Program
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             times++;
             FPS += dt;
-            if (times >= TargetFramesPerSecond * 5)
+            totalTime += dt;
+            if (totalTime >= 1)
             {
-                //Console.WriteLine($"FPS: {1 / (FPS / times)}");
+                Console.WriteLine($"FPS: {1 / (FPS / times)}");
+                totalTime = 0f;
                 times = 0;
                 FPS = 0f;
             }
